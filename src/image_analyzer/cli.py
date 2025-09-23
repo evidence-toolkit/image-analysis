@@ -12,9 +12,20 @@ from typing import Optional
 
 from .core_analyzer import LegalEvidenceAnalyzer, EvidenceOrganizer, LegalDomain
 
+# Import configuration system
+try:
+    from ..config.config import get_config, Environment
+except ImportError:
+    # Fallback for direct execution
+    sys.path.append(str(Path(__file__).parent.parent))
+    from config.config import get_config, Environment
 
-def create_parser() -> argparse.ArgumentParser:
-    """Create command line argument parser"""
+
+def create_parser(config=None) -> argparse.ArgumentParser:
+    """Create command line argument parser with configuration-based defaults"""
+    if config is None:
+        config = get_config()
+
     parser = argparse.ArgumentParser(
         description="Image Evidence Analyzer - AI-powered forensic image analysis for multi-domain legal evidence",
         formatter_class=argparse.RawDescriptionHelpFormatter,
@@ -26,7 +37,15 @@ Examples:
   %(prog)s analyze ./images -o ./evidence --parallel 4        # Use 4 parallel batches
   %(prog)s single image.jpg --legal-domain civil_litigation   # Single image civil analysis
   %(prog)s estimate ./images                                  # Estimate analysis costs
+  %(prog)s config show                                        # Show current configuration
         """
+    )
+
+    # Add global arguments
+    parser.add_argument(
+        '--environment', '-e',
+        choices=['development', 'testing', 'production', 'legal_production', 'demo'],
+        help='Environment configuration to use'
     )
 
     subparsers = parser.add_subparsers(dest='command', help='Available commands')
@@ -39,14 +58,14 @@ Examples:
     )
     analyze_parser.add_argument(
         '-o', '--output-dir',
-        default='./evidence',
-        help='Output directory for organized evidence (default: ./evidence)'
+        default=config.output.default_directory,
+        help=f'Output directory for organized evidence (default: {config.output.default_directory})'
     )
     analyze_parser.add_argument(
         '--parallel',
         type=int,
-        default=2,
-        help='Number of parallel batches for processing (default: 2)'
+        default=config.performance.default_parallel_batches,
+        help=f'Number of parallel batches for processing (default: {config.performance.default_parallel_batches})'
     )
     analyze_parser.add_argument(
         '--api-key',
@@ -103,6 +122,18 @@ Examples:
     # Version command
     version_parser = subparsers.add_parser('version', help='Show version information')
 
+    # Configuration command
+    config_parser = subparsers.add_parser('config', help='Configuration management')
+    config_subparsers = config_parser.add_subparsers(dest='config_action', help='Configuration actions')
+
+    # Config show subcommand
+    config_show_parser = config_subparsers.add_parser('show', help='Show current configuration')
+    config_show_parser.add_argument(
+        '--section',
+        choices=['openai', 'performance', 'file_processing', 'output', 'legal', 'cost_control', 'analysis', 'logging', 'security'],
+        help='Show specific configuration section'
+    )
+
     return parser
 
 
@@ -121,18 +152,43 @@ def get_api_key(args) -> Optional[str]:
     return api_key
 
 
-def count_images(directory: Path) -> int:
-    """Count images in directory"""
-    image_extensions = {'.jpg', '.jpeg', '.png', '.bmp', '.tiff'}
+def count_images(directory: Path, config=None) -> int:
+    """Count images in directory using configuration-based extensions"""
+    if config is None:
+        config = get_config()
+
+    supported_extensions = set(config.file_processing.supported_extensions)
     count = 0
     for file_path in directory.iterdir():
-        if file_path.suffix.lower() in image_extensions:
+        if file_path.suffix.lower() in supported_extensions:
             count += 1
     return count
 
+def estimate_cost(image_count: int, legal_domain: str, config=None) -> float:
+    """Estimate cost based on configuration and legal domain"""
+    if config is None:
+        config = get_config()
+
+    base_cost = config.openai.cost_per_image
+
+    # Apply domain-specific multiplier if available
+    try:
+        from ..config.config import get_legal_domain_config
+        domain_config = get_legal_domain_config(legal_domain)
+        if 'cost_multiplier' in domain_config:
+            base_cost *= domain_config['cost_multiplier']
+    except ImportError:
+        pass
+
+    return image_count * base_cost
+
 
 def handle_analyze_command(args) -> int:
-    """Handle the analyze directory command"""
+    """Handle the analyze directory command with configuration support"""
+    # Load configuration based on environment
+    environment = Environment(args.environment) if args.environment else None
+    config = get_config(environment)
+
     input_path = Path(args.input_dir)
 
     if not input_path.exists():
@@ -148,27 +204,37 @@ def handle_analyze_command(args) -> int:
     if not api_key:
         return 1
 
-    # Count images and estimate cost
-    image_count = count_images(input_path)
+    # Count images and estimate cost using configuration
+    image_count = count_images(input_path, config)
     if image_count == 0:
         print(f"❌ No images found in '{input_path}'")
         return 1
 
-    estimated_cost = image_count * 0.0014  # Approximate cost per image
+    estimated_cost = estimate_cost(image_count, args.legal_domain, config)
 
+    # Cost control and confirmation
     if not args.quiet:
         print(f"🔍 Found {image_count} images")
         print(f"💰 Estimated cost: ${estimated_cost:.2f}")
 
-        confirm = input("Do you want to proceed? (y/N): ").lower().strip()
-        if confirm != 'y':
-            print("Analysis cancelled")
-            return 0
+        # Check against configured cost limits
+        if config.cost_control.track_usage and estimated_cost > config.cost_control.confirm_above_cost:
+            if estimated_cost > config.cost_control.max_daily_cost:
+                print(f"❌ Estimated cost ${estimated_cost:.2f} exceeds daily limit of ${config.cost_control.max_daily_cost:.2f}")
+                return 1
 
-    # Create analyzer with specified legal domain
+            if not config.legal.require_confirmation:
+                print("⚠️  Analysis would proceed automatically (confirmation disabled in config)")
+            else:
+                confirm = input("Do you want to proceed? (y/N): ").lower().strip()
+                if confirm != 'y':
+                    print("Analysis cancelled")
+                    return 0
+
+    # Create analyzer with specified legal domain and environment
     try:
         legal_domain = LegalDomain(args.legal_domain)
-        analyzer = LegalEvidenceAnalyzer(api_key, legal_domain)
+        analyzer = LegalEvidenceAnalyzer(api_key, legal_domain, environment)
 
         if not args.quiet:
             print(f"\n🚀 Starting analysis of {image_count} images...")
@@ -223,7 +289,11 @@ def handle_analyze_command(args) -> int:
 
 
 def handle_single_command(args) -> int:
-    """Handle the single image analysis command"""
+    """Handle the single image analysis command with configuration support"""
+    # Load configuration based on environment
+    environment = Environment(args.environment) if args.environment else None
+    config = get_config(environment)
+
     image_path = Path(args.image_path)
 
     if not image_path.exists():
@@ -237,10 +307,14 @@ def handle_single_command(args) -> int:
 
     try:
         legal_domain = LegalDomain(args.legal_domain)
-        analyzer = LegalEvidenceAnalyzer(api_key, legal_domain)
+
+        # Calculate estimated cost using configuration
+        estimated_cost = estimate_cost(1, args.legal_domain, config)
+
+        analyzer = LegalEvidenceAnalyzer(api_key, legal_domain, environment)
 
         print(f"🔍 Analyzing: {image_path.name}")
-        print(f"💰 Estimated cost: $0.0014")
+        print(f"💰 Estimated cost: ${estimated_cost:.4f}")
 
         # Analyze single image
         result = analyzer.analyze_image(image_path)
@@ -291,7 +365,10 @@ def handle_single_command(args) -> int:
 
 
 def handle_estimate_command(args) -> int:
-    """Handle the cost estimation command"""
+    """Handle the cost estimation command with configuration support"""
+    # Load configuration
+    config = get_config()
+
     input_path = Path(args.input_dir)
 
     if not input_path.exists():
@@ -302,13 +379,18 @@ def handle_estimate_command(args) -> int:
         print(f"❌ '{input_path}' is not a directory")
         return 1
 
-    image_count = count_images(input_path)
-    estimated_cost = image_count * 0.0014
+    image_count = count_images(input_path, config)
+
+    # Default to employment law for estimation if not specified
+    legal_domain = getattr(args, 'legal_domain', 'employment_law')
+    estimated_cost = estimate_cost(image_count, legal_domain, config)
+    cost_per_image = config.openai.cost_per_image
 
     print(f"📊 Cost Estimation")
     print(f"   Images found: {image_count}")
     print(f"   Estimated cost: ${estimated_cost:.2f}")
-    print(f"   Cost per image: $0.0014")
+    print(f"   Base cost per image: ${cost_per_image:.4f}")
+    print(f"   Environment: {os.getenv('IMAGE_ANALYZER_ENV', 'development')}")
 
     return 0
 
@@ -321,8 +403,63 @@ def handle_version_command(args) -> int:
     return 0
 
 
+def handle_config_command(args) -> int:
+    """Handle the configuration command"""
+    if args.config_action == 'show':
+        return handle_config_show(args)
+    else:
+        print("❌ Unknown config action")
+        return 1
+
+
+def handle_config_show(args) -> int:
+    """Show current configuration"""
+    try:
+        # Load configuration
+        environment = Environment(args.environment) if args.environment else None
+        config = get_config(environment)
+
+        current_env = os.getenv('IMAGE_ANALYZER_ENV', 'development')
+        print(f"📋 Configuration (Environment: {current_env})")
+        print("=" * 50)
+
+        if args.section:
+            # Show specific section
+            section = getattr(config, args.section, None)
+            if section:
+                print(f"\n[{args.section.upper()}]")
+                for field_name, field_value in section.__dict__.items():
+                    print(f"  {field_name}: {field_value}")
+            else:
+                print(f"❌ Unknown section: {args.section}")
+                return 1
+        else:
+            # Show all sections
+            for section_name in ['openai', 'performance', 'file_processing', 'output', 'legal', 'cost_control', 'analysis', 'logging', 'security']:
+                section = getattr(config, section_name, None)
+                if section:
+                    print(f"\n[{section_name.upper()}]")
+                    for field_name, field_value in section.__dict__.items():
+                        print(f"  {field_name}: {field_value}")
+
+        print(f"\n💡 Use --environment to view different environment configurations")
+        print(f"💡 Available environments: development, testing, production, legal_production, demo")
+
+        return 0
+
+    except Exception as e:
+        print(f"❌ Error showing configuration: {e}")
+        return 1
+
+
 def main() -> int:
-    """Main CLI entry point"""
+    """Main CLI entry point with configuration support"""
+    # Set environment variable if provided before loading config
+    if len(sys.argv) > 1 and '--environment' in sys.argv:
+        env_index = sys.argv.index('--environment')
+        if env_index + 1 < len(sys.argv):
+            os.environ['IMAGE_ANALYZER_ENV'] = sys.argv[env_index + 1]
+
     parser = create_parser()
     args = parser.parse_args()
 
@@ -338,6 +475,8 @@ def main() -> int:
         return handle_estimate_command(args)
     elif args.command == 'version':
         return handle_version_command(args)
+    elif args.command == 'config':
+        return handle_config_command(args)
     else:
         print(f"❌ Unknown command: {args.command}")
         return 1

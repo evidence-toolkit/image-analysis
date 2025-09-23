@@ -4,7 +4,7 @@ Legal Evidence Analysis System V2 - Core Architecture
 Simple, powerful design focused on OpenAI structured outputs for legal evidence.
 """
 
-from typing import List
+from typing import List, Optional
 from pydantic import BaseModel, Field
 from enum import Enum
 from pathlib import Path
@@ -12,7 +12,18 @@ import base64
 import json
 import concurrent.futures
 import threading
+import time
+import os
 from openai import OpenAI
+
+# Import configuration system
+try:
+    from ..config.config import get_config, get_legal_domain_config, Environment
+except ImportError:
+    # Fallback for direct execution
+    import sys
+    sys.path.append(str(Path(__file__).parent.parent))
+    from config.config import get_config, get_legal_domain_config, Environment
 
 # =============================================================================
 # CORE MODELS - The Heart of V2 System
@@ -258,31 +269,86 @@ class LegalEvidenceWithPath(LegalEvidence):
 class LegalEvidenceAnalyzer:
     """OpenAI-powered forensic image analysis for multi-domain legal evidence"""
 
-    def __init__(self, api_key: str, legal_domain: LegalDomain = LegalDomain.employment_law):
-        self.client = OpenAI(api_key=api_key)
+    def __init__(self, api_key: str, legal_domain: LegalDomain = LegalDomain.employment_law,
+                 environment: Optional[Environment] = None):
+        # Load configuration
+        self.config = get_config(environment)
+        self.legal_domain_config = get_legal_domain_config(legal_domain.value)
+
+        # Initialize OpenAI client
+        self.client = OpenAI(api_key=api_key, timeout=self.config.openai.timeout)
         self.legal_domain = legal_domain
+
+        # Cost tracking with thread safety
         self.total_cost = 0.0
-        self.lock = threading.Lock()  # For thread-safe cost tracking
+        self.daily_cost = 0.0  # Track daily spending
+        self.lock = threading.Lock()
+
+        # Performance settings
+        self.max_workers = self.config.performance.max_workers
+        self.request_delay = self.config.performance.request_delay
 
     def encode_image(self, image_path: Path) -> str:
-        """Convert image to base64 for OpenAI Vision API"""
+        """Convert image to base64 for OpenAI Vision API with security validation"""
+        # Security validation
+        if self.config.security.validate_file_types:
+            if not self._validate_image_file(image_path):
+                raise ValueError(f"Invalid or unsupported image file: {image_path}")
+
+        # File size validation
+        file_size_mb = image_path.stat().st_size / (1024 * 1024)
+        if file_size_mb > self.config.file_processing.max_file_size_mb:
+            raise ValueError(f"File too large: {file_size_mb:.2f}MB exceeds limit of {self.config.file_processing.max_file_size_mb}MB")
+
         with open(image_path, "rb") as image_file:
             return base64.b64encode(image_file.read()).decode('utf-8')
+
+    def _validate_image_file(self, image_path: Path) -> bool:
+        """Validate image file type and format"""
+        # Check file extension
+        extension = image_path.suffix.lower()
+        if extension not in self.config.file_processing.supported_extensions:
+            return False
+
+        # Additional validation could be added here (file header validation, etc.)
+        return True
+
+    def _get_image_mime_type(self, image_path: Path) -> str:
+        """Get appropriate MIME type for image based on extension"""
+        extension = image_path.suffix.lower()
+        mime_types = {
+            '.jpg': 'image/jpeg',
+            '.jpeg': 'image/jpeg',
+            '.png': 'image/png',
+            '.bmp': 'image/bmp',
+            '.tiff': 'image/tiff',
+            '.webp': 'image/webp',
+            '.gif': 'image/gif'
+        }
+        return mime_types.get(extension, 'image/jpeg')  # Default fallback
 
     def analyze_image(self, image_path: Path) -> LegalEvidenceWithPath:
         """Generate forensic legal analysis of image evidence for specified legal domain"""
 
-        encoded_image = self.encode_image(image_path)
-        # TODO: Add image pre-processing if needed (e.g., resizing, enhancing)
-        # TODO: Look into adding rag/similar for extra context (e.g., domain-specific regulations context)
+        # Cost control check
+        estimated_cost = self._get_image_cost()
+        if not self._check_cost_limits(estimated_cost):
+            raise ValueError(f"Cost limit exceeded. Estimated cost: ${estimated_cost:.4f}")
 
-        # Get domain-specific analysis prompt
+        # Rate limiting
+        if self.request_delay > 0:
+            time.sleep(self.request_delay)
+
+        encoded_image = self.encode_image(image_path)
+        mime_type = self._get_image_mime_type(image_path)
+
+        # Get domain-specific analysis prompt (will move to config later)
         prompt = DomainConfig.get_analysis_prompt(self.legal_domain)
 
-        # Use OpenAI Responses API with structured output for guaranteed schema
-        response = self.client.responses.create(
-            model="gpt-4.1-mini",
-            input=[
+        # Prepare API call parameters
+        api_params = {
+            "model": self.config.openai.model,
+            "input": [
                 {
                     "role": "user",
                     "content": [
@@ -292,11 +358,22 @@ class LegalEvidenceAnalyzer:
                         },
                         {
                             "type": "input_image",
-                            "image_url": f"data:image/jpeg;base64,{encoded_image}"
+                            "image_url": f"data:{mime_type};base64,{encoded_image}"
                         }
                     ]
                 }
             ],
+        }
+
+        # Add optional parameters if configured
+        if self.config.openai.temperature is not None:
+            api_params["temperature"] = self.config.openai.temperature
+        if self.config.openai.max_tokens is not None:
+            api_params["max_tokens"] = self.config.openai.max_tokens
+
+        # Use OpenAI Responses API with structured output for guaranteed schema
+        response = self.client.responses.create(
+            **api_params,
             text={
                 "format": {
                     "type": "json_schema",
@@ -358,9 +435,11 @@ class LegalEvidenceAnalyzer:
             }
         )
 
-        # Track costs (GPT-4.1 Mini: approximately $0.0014 per image) - thread safe
+        # Track costs using configuration-based pricing - thread safe
+        actual_cost = self._get_image_cost()
         with self.lock:
-            self.total_cost += 0.0014
+            self.total_cost += actual_cost
+            self.daily_cost += actual_cost
 
         # Parse the structured response and add source path
         try:
@@ -371,13 +450,35 @@ class LegalEvidenceAnalyzer:
         except (json.JSONDecodeError, ValueError) as e:
             raise ValueError(f"Failed to parse OpenAI response: {e}")
 
+    def _get_image_cost(self) -> float:
+        """Get cost per image based on configuration and legal domain"""
+        base_cost = self.config.openai.cost_per_image
+
+        # Apply domain-specific cost multiplier if configured
+        if 'cost_multiplier' in self.legal_domain_config:
+            base_cost *= self.legal_domain_config['cost_multiplier']
+
+        return base_cost
+
+    def _check_cost_limits(self, estimated_cost: float) -> bool:
+        """Check if the estimated cost would exceed configured limits"""
+        if not self.config.cost_control.track_usage:
+            return True
+
+        # Check daily limit
+        potential_daily_cost = self.daily_cost + estimated_cost
+        if potential_daily_cost > self.config.cost_control.max_daily_cost:
+            return False
+
+        return True
+
     def analyze_directory(self, images_dir: Path) -> List[LegalEvidenceWithPath]:
-        """Analyze all images in directory"""
+        """Analyze all images in directory using configuration-based file filtering"""
         results = []
-        image_extensions = {'.jpg', '.jpeg', '.png', '.bmp', '.tiff'}
+        supported_extensions = set(self.config.file_processing.supported_extensions)
 
         for image_path in images_dir.iterdir():
-            if image_path.suffix.lower() in image_extensions:
+            if image_path.suffix.lower() in supported_extensions:
                 try:
                     evidence = self.analyze_image(image_path)
                     results.append(evidence)
@@ -400,8 +501,8 @@ class LegalEvidenceAnalyzer:
                 print(f"✗ {batch_name}Failed: {image_path.name} - {e}")
                 return None
 
-        # Use ThreadPoolExecutor for parallel API calls
-        with concurrent.futures.ThreadPoolExecutor(max_workers=3) as executor:
+        # Use ThreadPoolExecutor for parallel API calls with configured workers
+        with concurrent.futures.ThreadPoolExecutor(max_workers=self.max_workers) as executor:
             future_to_path = {executor.submit(analyze_single, path): path for path in image_paths}
 
             for future in concurrent.futures.as_completed(future_to_path):
@@ -411,14 +512,20 @@ class LegalEvidenceAnalyzer:
 
         return results
 
-    def analyze_directory_parallel(self, images_dir: Path, num_batches: int = 2) -> List[LegalEvidenceWithPath]:
-        """Analyze all images in directory using parallel batches"""
-        image_extensions = {'.jpg', '.jpeg', '.png', '.bmp', '.tiff'}
+    def analyze_directory_parallel(self, images_dir: Path, num_batches: Optional[int] = None) -> List[LegalEvidenceWithPath]:
+        """Analyze all images in directory using parallel batches with configuration"""
+        if num_batches is None:
+            num_batches = self.config.performance.default_parallel_batches
+
+        # Enforce maximum parallel batches limit
+        num_batches = min(num_batches, self.config.performance.max_parallel_batches)
+
+        supported_extensions = set(self.config.file_processing.supported_extensions)
 
         # Collect all image files
         all_images = [
             image_path for image_path in images_dir.iterdir()
-            if image_path.suffix.lower() in image_extensions
+            if image_path.suffix.lower() in supported_extensions
         ]
 
         if not all_images:
