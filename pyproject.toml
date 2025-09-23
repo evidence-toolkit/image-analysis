@@ -1,0 +1,32 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "image-evidence-analyzer"
+version = "0.1.0"
+description = "AI-powered forensic image analysis for legal evidence processing"
+authors = [
+    {name = "Evidence Toolkit Contributors"}
+]
+license = {text = "MIT"}
+readme = "README.md"
+requires-python = ">=3.8"
+dependencies = [
+    "openai>=1.0.0",
+    "pydantic>=2.0.0",
+    "Pillow>=10.0.0",
+    "click>=8.0.0",
+    "python-dotenv>=1.0.0",
+]
+
+[project.urls]
+Homepage = "https://github.com/evidence-toolkit/image-evidence-analyzer"
+Repository = "https://github.com/evidence-toolkit/image-evidence-analyzer"
+Issues = "https://github.com/evidence-toolkit/image-evidence-analyzer/issues"
+
+[project.scripts]
+image-analyzer = "image_analyzer.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]

@@ -1,0 +1,7 @@
+# Image Evidence Analyzer Dependencies
+openai>=1.0.0
+pydantic>=2.0.0
+Pillow>=10.0.0
+pathlib2>=2.3.0
+click>=8.0.0
+python-dotenv>=1.0.0
