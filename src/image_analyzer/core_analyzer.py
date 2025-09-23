@@ -25,12 +25,210 @@ class SeverityLevel(str, Enum):
     high = "high"
     critical = "critical"
 
+class LegalDomain(str, Enum):
+    """Legal domain specializations for evidence analysis"""
+    employment_law = "employment_law"
+    personal_injury = "personal_injury"
+    criminal_law = "criminal_law"
+    civil_litigation = "civil_litigation"
+    regulatory_compliance = "regulatory_compliance"
+    family_law = "family_law"
+
 class EvidenceType(str, Enum):
-    """Legal evidence categories for UK employment law"""
-    health_safety = "health_safety"
-    cleanliness = "cleanliness"
+    """Flexible legal evidence categories adaptable to different legal domains"""
+    # Employment Law
+    workplace_safety = "workplace_safety"
+    discrimination = "discrimination"
+    harassment = "harassment"
+    policy_violation = "policy_violation"
+
+    # Personal Injury
+    negligence = "negligence"
+    premises_liability = "premises_liability"
+    product_defect = "product_defect"
+    medical_evidence = "medical_evidence"
+
+    # Criminal Law
+    crime_scene = "crime_scene"
+    evidence_tampering = "evidence_tampering"
+    forensic_evidence = "forensic_evidence"
+    witness_evidence = "witness_evidence"
+
+    # Civil/General
+    contract_breach = "contract_breach"
+    property_damage = "property_damage"
     documentation = "documentation"
+    procedural_violation = "procedural_violation"
+
+    # Regulatory
+    regulatory_violation = "regulatory_violation"
+    compliance_failure = "compliance_failure"
+
+    # Severity-based (backwards compatibility)
     critical_violation = "critical_violation"
+
+    # Legacy (backwards compatibility)
+    health_safety = "workplace_safety"  # Alias for backwards compatibility
+    cleanliness = "workplace_safety"     # Maps to workplace safety
+
+# =============================================================================
+# DOMAIN CONFIGURATION - Legal Framework Specifications
+# =============================================================================
+
+class DomainConfig:
+    """Configuration for legal domain-specific analysis"""
+
+    @staticmethod
+    def get_evidence_types(domain: LegalDomain) -> List[str]:
+        """Get relevant evidence types for a legal domain"""
+        evidence_map = {
+            LegalDomain.employment_law: [
+                "workplace_safety", "discrimination", "harassment", "policy_violation", "critical_violation"
+            ],
+            LegalDomain.personal_injury: [
+                "negligence", "premises_liability", "product_defect", "medical_evidence", "critical_violation"
+            ],
+            LegalDomain.criminal_law: [
+                "crime_scene", "evidence_tampering", "forensic_evidence", "witness_evidence", "critical_violation"
+            ],
+            LegalDomain.civil_litigation: [
+                "contract_breach", "property_damage", "documentation", "procedural_violation"
+            ],
+            LegalDomain.regulatory_compliance: [
+                "regulatory_violation", "compliance_failure", "documentation", "critical_violation"
+            ],
+            LegalDomain.family_law: [
+                "documentation", "procedural_violation", "property_damage"
+            ]
+        }
+        return evidence_map.get(domain, ["documentation", "critical_violation"])
+
+    @staticmethod
+    def get_directory_structure(domain: LegalDomain) -> List[str]:
+        """Get evidence organization directories for a legal domain"""
+        structure_map = {
+            LegalDomain.employment_law: [
+                "critical_violations", "workplace_safety_violations", "discrimination_evidence", "documentation"
+            ],
+            LegalDomain.personal_injury: [
+                "critical_violations", "negligence_evidence", "premises_liability", "medical_evidence", "documentation"
+            ],
+            LegalDomain.criminal_law: [
+                "critical_evidence", "crime_scene_evidence", "forensic_evidence", "witness_evidence", "documentation"
+            ],
+            LegalDomain.civil_litigation: [
+                "contract_evidence", "property_damage", "procedural_evidence", "documentation"
+            ],
+            LegalDomain.regulatory_compliance: [
+                "critical_violations", "regulatory_violations", "compliance_failures", "documentation"
+            ],
+            LegalDomain.family_law: [
+                "evidence", "property_documentation", "procedural_evidence", "documentation"
+            ]
+        }
+        return structure_map.get(domain, ["critical_violations", "evidence", "documentation"])
+
+    @staticmethod
+    def get_analysis_prompt(domain: LegalDomain) -> str:
+        """Get domain-specific analysis prompt for legal evidence"""
+        prompts = {
+            LegalDomain.employment_law: """You are a forensic image analyst specializing in employment law evidence.
+
+Analyze this image with the expertise of a professional forensic examiner preparing evidence for employment law proceedings.
+
+Focus on:
+- Health & Safety at Work Act violations
+- Workplace discrimination evidence
+- Harassment documentation
+- Policy violations
+- Regulatory compliance issues
+- Documentation and record-keeping problems
+
+Provide thorough, objective analysis suitable for employment law proceedings.""",
+
+            LegalDomain.personal_injury: """You are a forensic image analyst specializing in personal injury evidence.
+
+Analyze this image with the expertise of a professional forensic examiner preparing evidence for personal injury litigation.
+
+Focus on:
+- Negligence evidence
+- Premises liability conditions
+- Product defects or failures
+- Medical evidence documentation
+- Accident scene analysis
+- Safety hazards and violations
+
+Provide thorough, objective analysis suitable for personal injury litigation.""",
+
+            LegalDomain.criminal_law: """You are a forensic image analyst specializing in criminal evidence.
+
+Analyze this image with the expertise of a professional forensic examiner preparing evidence for criminal proceedings.
+
+Focus on:
+- Crime scene documentation
+- Evidence tampering indicators
+- Forensic evidence preservation
+- Witness evidence corroboration
+- Chain of custody considerations
+- Criminal activity indicators
+
+Provide thorough, objective analysis suitable for criminal court proceedings.""",
+
+            LegalDomain.civil_litigation: """You are a forensic image analyst specializing in civil litigation evidence.
+
+Analyze this image with the expertise of a professional forensic examiner preparing evidence for civil court proceedings.
+
+Focus on:
+- Contract breach evidence
+- Property damage documentation
+- Procedural violations
+- Documentation authenticity
+- Compliance with civil procedures
+- Damages assessment support
+
+Provide thorough, objective analysis suitable for civil litigation.""",
+
+            LegalDomain.regulatory_compliance: """You are a forensic image analyst specializing in regulatory compliance evidence.
+
+Analyze this image with the expertise of a professional forensic examiner preparing evidence for regulatory proceedings.
+
+Focus on:
+- Regulatory violations
+- Compliance failures
+- Industry standard deviations
+- Documentation deficiencies
+- Safety standard violations
+- Procedural non-compliance
+
+Provide thorough, objective analysis suitable for regulatory proceedings.""",
+
+            LegalDomain.family_law: """You are a forensic image analyst specializing in family law evidence.
+
+Analyze this image with the expertise of a professional forensic examiner preparing evidence for family court proceedings.
+
+Focus on:
+- Property condition documentation
+- Living environment assessment
+- Safety concerns for minors
+- Procedural evidence
+- Documentation authenticity
+- Custody-related evidence
+
+Provide thorough, objective analysis suitable for family law proceedings."""
+        }
+
+        return prompts.get(domain, """You are a forensic image analyst specializing in legal evidence.
+
+Analyze this image with the expertise of a professional forensic examiner preparing evidence for legal proceedings.
+
+Focus on:
+- Evidence documentation
+- Procedural violations
+- Documentation authenticity
+- Legal relevance assessment
+- Expert witness considerations
+
+Provide thorough, objective analysis suitable for legal proceedings.""")
 
 class LegalEvidence(BaseModel):
     """Core structured output for legal evidence analysis"""
@@ -40,7 +238,7 @@ class LegalEvidence(BaseModel):
     severity_level: SeverityLevel = Field(description="Legal urgency rating")
 
     # Legal Content
-    legal_relevance: str = Field(description="Direct relevance to UK employment law")
+    legal_relevance: str = Field(description="Direct relevance to applicable legal framework")
     compliance_violations: str = Field(description="Specific regulation violations identified")
     expert_witness_notes: str = Field(description="Professional forensic observations")
 
@@ -58,10 +256,11 @@ class LegalEvidenceWithPath(LegalEvidence):
 # =============================================================================
 
 class LegalEvidenceAnalyzer:
-    """OpenAI-powered forensic image analysis for UK employment law"""
+    """OpenAI-powered forensic image analysis for multi-domain legal evidence"""
 
-    def __init__(self, api_key: str):
+    def __init__(self, api_key: str, legal_domain: LegalDomain = LegalDomain.employment_law):
         self.client = OpenAI(api_key=api_key)
+        self.legal_domain = legal_domain
         self.total_cost = 0.0
         self.lock = threading.Lock()  # For thread-safe cost tracking
 
@@ -71,26 +270,14 @@ class LegalEvidenceAnalyzer:
             return base64.b64encode(image_file.read()).decode('utf-8')
 
     def analyze_image(self, image_path: Path) -> LegalEvidenceWithPath:
-        """Generate forensic legal analysis of workplace image"""
+        """Generate forensic legal analysis of image evidence for specified legal domain"""
 
         encoded_image = self.encode_image(image_path)
         # TODO: Add image pre-processing if needed (e.g., resizing, enhancing)
-        # TODO: Look into adding rag/similar for extra context (e.g., H&S regulations context)
+        # TODO: Look into adding rag/similar for extra context (e.g., domain-specific regulations context)
 
-        # Professional legal analysis prompt
-        prompt = """You are a forensic image analyst specializing in UK employment law evidence.
-
-Analyze this workplace image with the expertise of a professional forensic examiner preparing evidence for employment tribunal proceedings.
-
-Focus on:
-- Health & Safety at Work Act 1974 violations
-- Workplace (Health, Safety and Welfare) Regulations 1992
-- Management of Health and Safety at Work Regulations 1999
-- Control of Substances Hazardous to Health Regulations 2002
-- Food safety and hygiene violations
-- Documentation and record-keeping issues
-
-Provide thorough, objective analysis suitable for UK employment law proceedings."""
+        # Get domain-specific analysis prompt
+        prompt = DomainConfig.get_analysis_prompt(self.legal_domain)
 
         # Use OpenAI Responses API with structured output for guaranteed schema
         response = self.client.responses.create(
@@ -101,7 +288,7 @@ Provide thorough, objective analysis suitable for UK employment law proceedings.
                     "content": [
                         {
                             "type": "input_text",
-                            "text": f"{prompt}\n\nAnalyze this workplace image for UK employment law evidence."
+                            "text": f"{prompt}\n\nAnalyze this image for legal evidence relevant to the specified domain."
                         },
                         {
                             "type": "input_image",
@@ -119,7 +306,14 @@ Provide thorough, objective analysis suitable for UK employment law proceedings.
                         "properties": {
                             "evidence_type": {
                                 "type": "string",
-                                "enum": ["health_safety", "cleanliness", "documentation", "critical_violation"],
+                                "enum": [
+                                    "workplace_safety", "discrimination", "harassment", "policy_violation",
+                                    "negligence", "premises_liability", "product_defect", "medical_evidence",
+                                    "crime_scene", "evidence_tampering", "forensic_evidence", "witness_evidence",
+                                    "contract_breach", "property_damage", "documentation", "procedural_violation",
+                                    "regulatory_violation", "compliance_failure", "critical_violation",
+                                    "health_safety", "cleanliness"
+                                ],
                                 "description": "Primary legal category"
                             },
                             "severity_level": {
@@ -129,7 +323,7 @@ Provide thorough, objective analysis suitable for UK employment law proceedings.
                             },
                             "legal_relevance": {
                                 "type": "string",
-                                "description": "Direct relevance to UK employment law"
+                                "description": "Direct relevance to applicable legal framework"
                             },
                             "compliance_violations": {
                                 "type": "string",
@@ -276,35 +470,23 @@ Provide thorough, objective analysis suitable for UK employment law proceedings.
 class EvidenceOrganizer:
     """Organize analysis results into legal case structure"""
 
-    def __init__(self, output_dir: Path):
+    def __init__(self, output_dir: Path, legal_domain: LegalDomain = LegalDomain.employment_law):
         self.output_dir = output_dir
+        self.legal_domain = legal_domain
         self.setup_directories()
 
     def setup_directories(self):
-        """Create organized evidence directory structure"""
-        dirs = [
-            "critical_violations",
-            "health_safety_violations",
-            "cleanliness_concerns",
-            "documentation"
-        ]
+        """Create organized evidence directory structure based on legal domain"""
+        dirs = DomainConfig.get_directory_structure(self.legal_domain)
 
         for dir_name in dirs:
             (self.output_dir / dir_name).mkdir(parents=True, exist_ok=True)
 
     def organize_evidence(self, results: List[LegalEvidenceWithPath]):
-        """Sort evidence by legal significance"""
+        """Sort evidence by legal significance and domain-specific categories"""
 
         for evidence in results:
-            # Determine target directory based on evidence type and severity
-            if evidence.severity_level == SeverityLevel.critical:
-                target_dir = "critical_violations"
-            elif evidence.evidence_type == EvidenceType.health_safety:
-                target_dir = "health_safety_violations"
-            elif evidence.evidence_type == EvidenceType.cleanliness:
-                target_dir = "cleanliness_concerns"
-            else:
-                target_dir = "documentation"
+            target_dir = self._determine_target_directory(evidence)
 
             # Copy image to appropriate directory
             source_path = Path(evidence.image_path)
@@ -324,9 +506,73 @@ class EvidenceOrganizer:
                 f.write(f"Legal Relevance:\n{evidence.legal_relevance}\n\n")
                 f.write(f"Compliance Violations:\n{evidence.compliance_violations}\n\n")
                 f.write(f"Expert Witness Notes:\n{evidence.expert_witness_notes}\n\n")
-                f.write(f"Action Required: {evidence.immediate_action_required}\n")
-                f.write(f"Evidence Strength: {evidence.evidence_strength}\n")
+                f.write(f"Immediate Action Required: {'Yes' if evidence.immediate_action_required else 'No'}\n\n")
+                f.write(f"Evidence Strength:\n{evidence.evidence_strength}\n\n")
                 f.write(f"Supporting Documentation Needed:\n{evidence.supporting_documentation_needed}\n")
+
+    def _determine_target_directory(self, evidence: LegalEvidenceWithPath) -> str:
+        """Determine appropriate directory based on evidence type, severity, and legal domain"""
+
+        # Critical violations always go to critical directory (if exists)
+        if evidence.severity_level == SeverityLevel.critical:
+            dirs = DomainConfig.get_directory_structure(self.legal_domain)
+            for dir_name in dirs:
+                if "critical" in dir_name.lower():
+                    return dir_name
+
+        # Domain-specific evidence type mapping
+        evidence_type_str = evidence.evidence_type.value
+
+        domain_mapping = {
+            LegalDomain.employment_law: {
+                "workplace_safety": "workplace_safety_violations",
+                "health_safety": "workplace_safety_violations",  # backwards compatibility
+                "cleanliness": "workplace_safety_violations",    # backwards compatibility
+                "discrimination": "discrimination_evidence",
+                "harassment": "discrimination_evidence",
+                "policy_violation": "workplace_safety_violations",
+                "critical_violation": "critical_violations"
+            },
+            LegalDomain.personal_injury: {
+                "negligence": "negligence_evidence",
+                "premises_liability": "premises_liability",
+                "product_defect": "negligence_evidence",
+                "medical_evidence": "medical_evidence",
+                "critical_violation": "critical_violations"
+            },
+            LegalDomain.criminal_law: {
+                "crime_scene": "crime_scene_evidence",
+                "evidence_tampering": "critical_evidence",
+                "forensic_evidence": "forensic_evidence",
+                "witness_evidence": "witness_evidence",
+                "critical_violation": "critical_evidence"
+            },
+            LegalDomain.civil_litigation: {
+                "contract_breach": "contract_evidence",
+                "property_damage": "property_damage",
+                "procedural_violation": "procedural_evidence"
+            },
+            LegalDomain.regulatory_compliance: {
+                "regulatory_violation": "regulatory_violations",
+                "compliance_failure": "compliance_failures",
+                "critical_violation": "critical_violations"
+            },
+            LegalDomain.family_law: {
+                "property_damage": "property_documentation",
+                "procedural_violation": "procedural_evidence"
+            }
+        }
+
+        # Get mapping for current domain
+        type_mapping = domain_mapping.get(self.legal_domain, {})
+        target_dir = type_mapping.get(evidence_type_str, "documentation")
+
+        # Verify the directory exists in our structure
+        dirs = DomainConfig.get_directory_structure(self.legal_domain)
+        if target_dir not in dirs:
+            target_dir = "documentation"
+
+        return target_dir
 
     def generate_summary_report(self, results: List[LegalEvidenceWithPath]):
         """Create comprehensive evidence summary for legal review"""

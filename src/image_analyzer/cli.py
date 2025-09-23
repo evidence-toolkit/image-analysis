@@ -10,21 +10,22 @@ import sys
 from pathlib import Path
 from typing import Optional
 
-from .core_analyzer import LegalEvidenceAnalyzer, EvidenceOrganizer
+from .core_analyzer import LegalEvidenceAnalyzer, EvidenceOrganizer, LegalDomain
 
 
 def create_parser() -> argparse.ArgumentParser:
     """Create command line argument parser"""
     parser = argparse.ArgumentParser(
-        description="Image Evidence Analyzer - AI-powered forensic image analysis for legal evidence",
+        description="Image Evidence Analyzer - AI-powered forensic image analysis for multi-domain legal evidence",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
-  %(prog)s analyze ./images                       # Analyze images in directory
-  %(prog)s analyze ./images -o ./evidence        # Save results to evidence directory
-  %(prog)s analyze ./images --parallel 4         # Use 4 parallel batches
-  %(prog)s analyze ./images --api-key sk-...     # Specify API key directly
-  %(prog)s single image.jpg                      # Analyze single image
+  %(prog)s analyze ./images                                    # Analyze images (employment law)
+  %(prog)s analyze ./images --legal-domain personal_injury    # Personal injury analysis
+  %(prog)s analyze ./images --legal-domain criminal_law       # Criminal evidence analysis
+  %(prog)s analyze ./images -o ./evidence --parallel 4        # Use 4 parallel batches
+  %(prog)s single image.jpg --legal-domain civil_litigation   # Single image civil analysis
+  %(prog)s estimate ./images                                  # Estimate analysis costs
         """
     )
 
@@ -57,6 +58,12 @@ Examples:
         help='Suppress verbose output'
     )
     analyze_parser.add_argument(
+        '--legal-domain',
+        choices=['employment_law', 'personal_injury', 'criminal_law', 'civil_litigation', 'regulatory_compliance', 'family_law'],
+        default='employment_law',
+        help='Legal domain for evidence analysis (default: employment_law)'
+    )
+    analyze_parser.add_argument(
         '--json-output',
         help='Save analysis results as JSON to specified file'
     )
@@ -78,6 +85,12 @@ Examples:
     single_parser.add_argument(
         '--json-output',
         help='Save analysis results as JSON to specified file'
+    )
+    single_parser.add_argument(
+        '--legal-domain',
+        choices=['employment_law', 'personal_injury', 'criminal_law', 'civil_litigation', 'regulatory_compliance', 'family_law'],
+        default='employment_law',
+        help='Legal domain for evidence analysis (default: employment_law)'
     )
 
     # Cost estimate command
@@ -152,9 +165,10 @@ def handle_analyze_command(args) -> int:
             print("Analysis cancelled")
             return 0
 
-    # Create analyzer
+    # Create analyzer with specified legal domain
     try:
-        analyzer = LegalEvidenceAnalyzer(api_key)
+        legal_domain = LegalDomain(args.legal_domain)
+        analyzer = LegalEvidenceAnalyzer(api_key, legal_domain)
 
         if not args.quiet:
             print(f"\n🚀 Starting analysis of {image_count} images...")
@@ -169,9 +183,9 @@ def handle_analyze_command(args) -> int:
             print("❌ No images were successfully analyzed")
             return 1
 
-        # Organize evidence
+        # Organize evidence with specified legal domain
         output_path = Path(args.output_dir)
-        organizer = EvidenceOrganizer(output_path)
+        organizer = EvidenceOrganizer(output_path, legal_domain)
         organizer.organize_evidence(results)
         organizer.generate_summary_report(results)
 
@@ -222,7 +236,8 @@ def handle_single_command(args) -> int:
         return 1
 
     try:
-        analyzer = LegalEvidenceAnalyzer(api_key)
+        legal_domain = LegalDomain(args.legal_domain)
+        analyzer = LegalEvidenceAnalyzer(api_key, legal_domain)
 
         print(f"🔍 Analyzing: {image_path.name}")
         print(f"💰 Estimated cost: $0.0014")

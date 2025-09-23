@@ -2,7 +2,7 @@
 Image Evidence Analyzer
 
 AI-powered forensic image analysis for legal evidence processing.
-Specializes in UK employment law violations and workplace safety documentation.
+Supports multiple legal domains including employment law, personal injury, criminal law, civil litigation, regulatory compliance, and family law.
 """
 
 from .core_analyzer import (
@@ -11,7 +11,9 @@ from .core_analyzer import (
     LegalEvidence,
     LegalEvidenceWithPath,
     SeverityLevel,
-    EvidenceType
+    EvidenceType,
+    LegalDomain,
+    DomainConfig
 )
 
 __version__ = "0.1.0"
@@ -23,5 +25,7 @@ __all__ = [
     "LegalEvidence",
     "LegalEvidenceWithPath",
     "SeverityLevel",
-    "EvidenceType"
+    "EvidenceType",
+    "LegalDomain",
+    "DomainConfig"
 ]
