@@ -21,12 +21,24 @@ The primary class for forensic image analysis using OpenAI's structured output c
 #### Constructor
 
 ```python
-LegalEvidenceAnalyzer(api_key: str, legal_domain: LegalDomain = LegalDomain.employment_law)
+LegalEvidenceAnalyzer(
+    api_key: str,
+    legal_domain: LegalDomain = LegalDomain.employment_law,
+    environment: Optional[Environment] = None
+)
 ```
 
 **Parameters:**
 - `api_key` (str): OpenAI API key for GPT-4 Vision access
 - `legal_domain` (LegalDomain): Legal specialization domain (default: employment_law)
+- `environment` (Optional[Environment]): Configuration environment (default: development)
+
+**Available Environments:**
+- `Environment.DEVELOPMENT`: Conservative settings, cost-effective models
+- `Environment.TESTING`: Test-optimized configuration
+- `Environment.PRODUCTION`: High-performance settings with GPT-4o
+- `Environment.LEGAL_PRODUCTION`: Maximum security with full audit logging
+- `Environment.DEMO`: Cost-optimized for demonstrations
 
 **Example:**
 ```python
@@ -149,6 +161,52 @@ Process a specific batch of images in parallel.
 - `List[LegalEvidenceWithPath]`: Analysis results for the batch
 
 **Thread Pool:** Uses ThreadPoolExecutor with max_workers=3 for optimal API usage
+
+##### `initialize_audit_logging(output_dir: Path) -> None`
+
+Initialize comprehensive audit logging and chain of custody tracking.
+
+**Parameters:**
+- `output_dir` (Path): Directory where audit logs will be stored
+
+**Generated Files:**
+- `audit.log`: JSON-formatted audit trail with timestamps
+- `chain_of_custody.json`: Complete evidence chain documentation
+
+**Logged Events:**
+- File access with SHA-256 checksums
+- API calls with costs and success/failure
+- Evidence classifications and confidence scores
+- Expert review requirements and reasons
+- Cost tracking events
+
+**Example:**
+```python
+# Enable comprehensive audit logging
+analyzer.initialize_audit_logging(Path("./evidence_output"))
+
+# All subsequent operations are automatically logged
+results = analyzer.analyze_directory(Path("./images"))
+
+# Audit files are automatically created and maintained
+```
+
+##### Configuration Access
+
+The analyzer provides access to its Pydantic configuration:
+
+```python
+# Access configuration sections
+print(f"Model: {analyzer.config.openai.model}")
+print(f"Max workers: {analyzer.config.performance.max_workers}")
+print(f"Confidence threshold: {analyzer.config.analysis.confidence_threshold}")
+print(f"Audit logging enabled: {analyzer.config.legal.audit_logging}")
+
+# Access legal domain configuration
+domain_config = analyzer.legal_domain_config
+evidence_types = domain_config.get('evidence_types', [])
+require_review = domain_config.get('require_expert_review', False)
+```
 
 ---
 

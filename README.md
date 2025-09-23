@@ -255,41 +255,117 @@ case_evidence/
 
 ## ⚙️ Advanced Configuration
 
-### **Domain-Specific Analysis**
+### **Environment-Based Configuration**
+The system uses comprehensive Pydantic models for type-safe configuration management across multiple environments:
+
 ```python
-from image_analyzer import LegalDomain, DomainConfig
+from image_analyzer import LegalEvidenceAnalyzer, LegalDomain
+from config.config import Environment
 
-# Employment law configuration
-employment_config = DomainConfig.get_evidence_types(LegalDomain.employment_law)
-# Returns: ["workplace_safety", "discrimination", "harassment", "policy_violation"]
+# Development environment (conservative settings)
+analyzer_dev = LegalEvidenceAnalyzer(
+    api_key=os.getenv('OPENAI_API_KEY'),
+    legal_domain=LegalDomain.employment_law,
+    environment=Environment.DEVELOPMENT  # Slower, safer processing
+)
 
-# Personal injury configuration
-injury_config = DomainConfig.get_evidence_types(LegalDomain.personal_injury)
-# Returns: ["negligence", "premises_liability", "product_defect", "medical_evidence"]
+# Production environment (optimized performance)
+analyzer_prod = LegalEvidenceAnalyzer(
+    api_key=os.getenv('OPENAI_API_KEY'),
+    legal_domain=LegalDomain.employment_law,
+    environment=Environment.PRODUCTION  # GPT-4o, higher confidence thresholds
+)
 
-# Custom analysis prompts
-criminal_prompt = DomainConfig.get_analysis_prompt(LegalDomain.criminal_law)
+# Legal production (maximum security and audit trails)
+analyzer_legal = LegalEvidenceAnalyzer(
+    api_key=os.getenv('OPENAI_API_KEY'),
+    legal_domain=LegalDomain.employment_law,
+    environment=Environment.LEGAL_PRODUCTION  # Full audit logging, chain of custody
+)
 ```
 
-### **Professional Deployment**
+### **Configuration Files**
+The system supports YAML-based configuration with environment inheritance:
+
+```yaml
+# config/defaults.yaml - Base configuration
+openai:
+  model: "gpt-4.1-mini"
+  cost_per_image: 0.0014
+  temperature: 0.1
+
+analysis:
+  confidence_threshold: 0.7
+  enable_confidence_filtering: true
+  require_expert_review: false
+
+legal:
+  audit_logging: true
+  chain_of_custody: true
+  include_checksums: true
+
+# config/environments.yaml - Environment overrides
+production:
+  openai:
+    model: "gpt-4o"          # Higher capability model
+    temperature: 0.05        # More consistent results
+  analysis:
+    confidence_threshold: 0.85  # Higher quality threshold
+  performance:
+    max_workers: 4           # Faster processing
+```
+
+### **Domain-Specific Configuration**
+Legal domains have specialized settings and evidence mappings:
+
+```yaml
+# config/legal_domains.yaml
+employment_law:
+  confidence_threshold: 0.8         # Higher threshold for legal evidence
+  require_expert_review: true       # Always require expert review
+  evidence_types:
+    - workplace_safety
+    - discrimination
+    - harassment
+    - policy_violation
+    - critical_violation
+  directory_structure:
+    - critical_violations
+    - workplace_safety_violations
+    - discrimination_evidence
+    - documentation
+```
+
+### **Audit Logging and Chain of Custody**
 ```python
-# Production configuration
-analyzer = LegalEvidenceAnalyzer(
-    api_key=os.getenv('OPENAI_API_KEY'),
-    legal_domain=LegalDomain.employment_law
-)
+# Initialize audit logging
+analyzer.initialize_audit_logging(output_directory)
 
-# Enterprise batch processing
-results = analyzer.analyze_directory_parallel(
-    evidence_directory,
-    num_batches=4  # Optimized for large case loads
-)
+# All operations are automatically logged:
+# - File access and checksums
+# - API calls and costs
+# - Evidence classifications
+# - Expert review requirements
+# - Chain of custody events
 
-# Professional evidence organization
-organizer = EvidenceOrganizer(
-    output_dir=Path("./court_ready_evidence"),
-    legal_domain=LegalDomain.employment_law
-)
+# Generated files:
+# - audit.log (JSON format)
+# - chain_of_custody.json (Complete evidence trail)
+```
+
+### **Cost Control and Monitoring**
+```python
+# Configurable cost controls
+cost_config = {
+    "max_daily_cost": 50.0,        # Maximum daily spending
+    "warning_threshold": 10.0,     # Warning at $10
+    "confirm_above_cost": 5.0,     # Require confirmation above $5
+    "track_usage": True            # Enable detailed tracking
+}
+
+# Real-time cost monitoring with thread-safe tracking
+print(f"Current session cost: ${analyzer.total_cost:.4f}")
+print(f"Daily cost: ${analyzer.daily_cost:.4f}")
 ```
 
 ---

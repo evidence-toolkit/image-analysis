@@ -89,13 +89,57 @@ This is an AI-powered forensic image analysis tool for UK employment law evidenc
 - `click>=8.0.0`: CLI framework
 - `python-dotenv>=1.0.0`: Environment configuration
 
+## Configuration System
+
+### Pydantic-Based Configuration
+The system uses comprehensive Pydantic models for type-safe configuration management:
+
+```python
+from config.config import get_config, Environment
+
+# Load environment-specific configuration
+config = get_config(Environment.PRODUCTION)
+
+# All configuration is validated at runtime
+print(f"Model: {config.openai.model}")
+print(f"Confidence threshold: {config.analysis.confidence_threshold}")
+print(f"Audit logging: {config.legal.audit_logging}")
+```
+
+### Environment Types
+- **development**: Conservative settings, gpt-4.1-mini, enhanced logging
+- **testing**: Test-optimized configuration with predictable behavior
+- **production**: High-performance settings, gpt-4o, optimized parallel processing
+- **legal_production**: Maximum security, mandatory audit logging, chain of custody
+- **demo**: Cost-optimized for demonstrations
+
+### Configuration Files
+```
+config/
+├── defaults.yaml           # Base configuration
+├── environments.yaml       # Environment-specific overrides
+├── legal_domains.yaml      # Legal domain configurations
+└── user.yaml              # Optional user customizations
+```
+
+### Key Features
+- **Type Safety**: Full Pydantic validation with error handling
+- **Environment Inheritance**: Hierarchical configuration with overrides
+- **Legal Domain Specialization**: Domain-specific confidence thresholds and requirements
+- **Audit Logging**: Comprehensive audit trails with SHA-256 checksums
+- **Chain of Custody**: Complete evidence tracking for legal compliance
+- **Cost Controls**: Configurable spending limits and warnings
+- **Expert Review**: Automated flagging based on confidence and severity
+
 ## Development Notes
 
-- Environment variables are required: `OPENAI_API_KEY` must be set
-- Image formats supported: .jpg, .jpeg, .png, .bmp, .tiff
+- Environment variables: `OPENAI_API_KEY` required, `IMAGE_ANALYZER_ENV` optional
+- Configuration validation: Pydantic models ensure type safety and value constraints
+- Image formats supported: .jpg, .jpeg, .png, .bmp, .tiff, .webp, .gif
 - Output structure follows legal evidence organization patterns
-- Parallel processing is optimized for API rate limits (default 3 workers)
+- Parallel processing optimized for API rate limits (configurable workers)
 - All analysis results include forensic-quality expert witness notes
+- Audit logging creates JSON audit trails and chain of custody documentation
 
 ## Legal Compliance Focus
 

@@ -26,9 +26,9 @@ from openai import OpenAI
 try:
     from ..config.config import get_config, get_legal_domain_config, Environment  # type: ignore
 except ImportError:
-    # Fallback for direct execution
+    # Fallback for direct execution or CLI usage
     import sys
-    sys.path.append(str(Path(__file__).parent.parent))
+    sys.path.append(str(Path(__file__).parent.parent.parent))
     from config.config import get_config, get_legal_domain_config, Environment  # type: ignore
 
 # =============================================================================

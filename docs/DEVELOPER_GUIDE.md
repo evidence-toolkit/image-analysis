@@ -52,14 +52,39 @@ pre-commit install
 ```
 
 #### 2. Environment Configuration
-```bash
-# Copy example environment file
-cp .env.example .env
 
-# Edit .env file with your credentials
-OPENAI_API_KEY=sk-your-development-key-here
-LEGAL_DOMAIN=employment_law
-DEBUG=true
+**Environment Variables:**
+```bash
+# Required
+export OPENAI_API_KEY=sk-your-development-key-here
+
+# Optional (defaults to development)
+export IMAGE_ANALYZER_ENV=development
+
+# Optional for chain of custody
+export USER=your_username
+```
+
+**Development Configuration:**
+The system uses Pydantic models for type-safe configuration. For development, create custom overrides:
+
+```yaml
+# config/user.yaml (optional development overrides)
+openai:
+  model: "gpt-4.1-mini"      # Cost-effective for development
+  temperature: 0.2           # Slightly higher for development testing
+
+performance:
+  max_workers: 2             # Conservative for development
+  request_delay: 1.0         # Slower to avoid rate limits
+
+cost_control:
+  max_daily_cost: 10.0       # Lower limit for development
+  confirm_above_cost: 1.0    # Confirm above $1 in development
+
+analysis:
+  confidence_threshold: 0.6   # Lower threshold for testing
+  enable_confidence_filtering: false  # Test all results
 ```
 
 #### 3. Verify Installation
@@ -107,11 +132,20 @@ class LegalEvidenceAnalyzer:
     Handles single image and batch processing with thread-safe cost tracking.
     """
 
-    def __init__(self, api_key: str, legal_domain: LegalDomain = LegalDomain.employment_law):
-        self.client = OpenAI(api_key=api_key)
+    def __init__(self, api_key: str, legal_domain: LegalDomain = LegalDomain.employment_law,
+                 environment: Optional[Environment] = None):
+        # Load configuration with Pydantic validation
+        self.config = get_config(environment)
+        self.legal_domain_config = get_legal_domain_config(legal_domain.value)
+
+        self.client = OpenAI(api_key=api_key, timeout=self.config.openai.timeout)
         self.legal_domain = legal_domain
         self.total_cost = 0.0
         self.lock = threading.Lock()  # Thread-safe cost tracking
+
+        # Audit logging and chain of custody
+        self.audit_logger = None
+        self.custody_tracker = None
 ```
 
 **Key Methods:**
@@ -120,27 +154,72 @@ class LegalEvidenceAnalyzer:
 - `analyze_directory_parallel()`: Concurrent batch processing
 - `analyze_image_batch()`: Parallel processing of image batches
 
-#### 2. Domain Configuration (`DomainConfig`)
-**Primary Responsibility:** Legal domain-specific configuration management
+#### 2. Configuration System (`config.py`)
+**Primary Responsibility:** Type-safe configuration management with Pydantic models
 
 ```python
-class DomainConfig:
-    """Static configuration for legal domain-specific analysis"""
+from config.config import get_config, get_legal_domain_config, Environment
 
-    @staticmethod
-    def get_evidence_types(domain: LegalDomain) -> List[str]:
-        """Return evidence types relevant to legal domain"""
+# Load environment-specific configuration
+config = get_config(Environment.DEVELOPMENT)
 
-    @staticmethod
-    def get_directory_structure(domain: LegalDomain) -> List[str]:
-        """Return directory organization for legal domain"""
+# Access type-safe configuration
+print(f"Model: {config.openai.model}")
+print(f"Max workers: {config.performance.max_workers}")
+print(f"Confidence threshold: {config.analysis.confidence_threshold}")
 
-    @staticmethod
-    def get_analysis_prompt(domain: LegalDomain) -> str:
-        """Return domain-specific analysis prompt"""
+# Load legal domain configuration
+domain_config = get_legal_domain_config("employment_law")
+evidence_types = domain_config.get('evidence_types', [])
 ```
 
-#### 3. Evidence Organization (`EvidenceOrganizer`)
+**Configuration Structure:**
+- `OpenAIConfig`: API settings, model selection, cost tracking
+- `PerformanceConfig`: Concurrency, batch processing, delays
+- `AnalysisConfig`: Confidence thresholds, retry logic, expert review
+- `LegalConfig`: Audit logging, chain of custody, compliance
+- `CostControlConfig`: Spending limits, warnings, tracking
+- `OutputConfig`: Formatting, progress indicators, file handling
+- `SecurityConfig`: File validation, path restrictions
+- `LoggingConfig`: Log levels, rotation, file handling
+
+#### 3. Configuration Files
+
+**File Structure:**
+```
+config/
+├── defaults.yaml           # Base configuration
+├── environments.yaml       # Environment-specific overrides
+├── legal_domains.yaml      # Domain-specific settings
+└── user.yaml              # Optional user overrides
+```
+
+**Key Features:**
+- Type-safe Pydantic models with validation
+- Environment-based configuration inheritance
+- Runtime validation with helpful error messages
+- Domain-specific settings and thresholds
+- Comprehensive audit logging and chain of custody
+
+#### 4. Audit Logging and Chain of Custody
+
+**Initialization:**
+```python
+# Enable audit logging and chain of custody
+analyzer.initialize_audit_logging(output_directory)
+
+# All operations are automatically logged:
+# - File access with SHA-256 checksums
+# - API calls with costs and success/failure
+# - Evidence classifications and confidence scores
+# - Expert review requirements and reasons
+```
+
+**Generated Audit Files:**
+- `audit.log`: JSON-formatted audit trail
+- `chain_of_custody.json`: Complete evidence chain documentation
+
+#### 5. Evidence Organization (`EvidenceOrganizer`)
 **Primary Responsibility:** Automated evidence categorization and reporting
 
 ```python
