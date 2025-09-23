@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "image-evidence-analyzer"
-version = "0.1.0"
+version = "0.1.1"
 description = "AI-powered forensic image analysis for legal evidence processing"
 authors = [
     {name = "Evidence Toolkit Contributors"}
@@ -31,3 +31,10 @@ image-analyzer = "image_analyzer.cli:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]
+
+[dependency-groups]
+dev = [
+    "build>=1.2.2.post1",
+    "pytest>=8.3.5",
+    "safety>=3.6.1",
+]

@@ -31,7 +31,7 @@ try:
 except ImportError:
     _config_available = False
 
-__version__ = "0.1.0"
+__version__ = "0.1.1"
 __author__ = "Evidence Toolkit Contributors"
 
 __all__ = [

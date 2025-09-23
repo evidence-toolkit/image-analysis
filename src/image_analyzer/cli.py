@@ -402,7 +402,8 @@ def handle_estimate_command(args) -> int:
 
 def handle_version_command(args) -> int:
     """Handle the version command"""
-    print("Image Evidence Analyzer v0.1.0")
+    from . import __version__
+    print(f"Image Evidence Analyzer v{__version__}")
     print("AI-powered forensic image analysis for legal evidence")
     print("Part of the Evidence Toolkit project")
     return 0
