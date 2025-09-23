@@ -1,0 +1,27 @@
+LEGAL EVIDENCE ANALYSIS
+=====================
+
+Image: IMG_2167.JPEG
+Evidence Type: EvidenceType.workplace_safety
+Severity: SeverityLevel.high
+Confidence Score: 0.90
+
+⚠️  EXPERT REVIEW REQUIRED
+Review Reason: Immediate action required
+
+Legal Relevance:
+The image shows a refrigerated display shelf with visible stains and possible contamination, which may violate food safety and workplace hygiene regulations under the Health & Safety at Work Act and related food safety standards.
+
+Compliance Violations:
+Potential violations of workplace hygiene standards, food safety regulations, and cleanliness requirements for food handling and storage areas.
+
+Expert Witness Notes:
+The presence of stains and residue on the shelf surface indicates inadequate cleaning and sanitation practices. This could lead to cross-contamination and pose health risks to employees and consumers. The condition of the display shelf suggests non-compliance with mandatory hygiene protocols.
+
+Immediate Action Required: Yes
+
+Evidence Strength:
+Strong visual evidence of unsanitary conditions that can be corroborated with workplace cleaning logs and health inspection reports.
+
+Supporting Documentation Needed:
+Cleaning and maintenance records, health inspection reports, employee training records on hygiene protocols, and any prior complaints or incident reports related to workplace sanitation.

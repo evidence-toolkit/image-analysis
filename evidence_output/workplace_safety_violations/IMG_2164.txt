@@ -1,0 +1,27 @@
+LEGAL EVIDENCE ANALYSIS
+=====================
+
+Image: IMG_2164.JPEG
+Evidence Type: EvidenceType.workplace_safety
+Severity: SeverityLevel.high
+Confidence Score: 0.90
+
+⚠️  EXPERT REVIEW REQUIRED
+Review Reason: Immediate action required
+
+Legal Relevance:
+The image shows a visibly dirty and potentially unsanitary environment with grime and rust on a metal grate and stained, damaged tiles. This suggests a failure to maintain a clean and safe workplace, which may violate health and safety regulations requiring employers to provide a safe working environment.
+
+Compliance Violations:
+Potential breaches of workplace hygiene standards and Health & Safety at Work Act provisions related to cleanliness and maintenance of work areas, increasing risk of slips, trips, and contamination.
+
+Expert Witness Notes:
+The accumulation of dirt and rust on the metal grate and the stained, damaged floor tiles indicate prolonged neglect of cleaning and maintenance protocols. This environment could contribute to workplace accidents or health hazards, especially in food handling or healthcare settings.
+
+Immediate Action Required: Yes
+
+Evidence Strength:
+Strong visual evidence of poor maintenance and hygiene conditions, suitable for supporting claims of workplace safety violations.
+
+Supporting Documentation Needed:
+Inspection reports, cleaning logs, maintenance records, and employee complaints or incident reports related to workplace conditions.

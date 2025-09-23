@@ -282,8 +282,16 @@ class SeverityLevel(str, Enum):
 
 #### `EvidenceType`
 
-Multi-domain legal evidence categories.
+Multi-domain legal evidence categories with API validation.
 
+**IMPORTANT: Recent Validation Fix**
+
+We recently fixed a Pydantic validation error where OpenAI was attempting to return alias enum values that were not part of the official API schema. The system now maintains a clear distinction between:
+
+1. **API Schema Values** (19 values): Only these can be returned by OpenAI
+2. **Python Code Aliases**: Available for backwards compatibility in Python code only
+
+**API Schema Values (Sent to OpenAI):**
 ```python
 class EvidenceType(str, Enum):
     # Employment Law
@@ -316,9 +324,64 @@ class EvidenceType(str, Enum):
 
     # Backwards Compatibility
     critical_violation = "critical_violation"
-    health_safety = "workplace_safety"    # Alias
-    cleanliness = "workplace_safety"      # Maps to workplace safety
 ```
+
+**Python Code Aliases (Code-Only):**
+```python
+# These work in Python code but CANNOT be returned by OpenAI API
+health_safety = "workplace_safety"    # Alias for backwards compatibility
+cleanliness = "workplace_safety"      # Maps to workplace safety
+```
+
+**OpenAI Schema Definition:**
+The actual schema sent to OpenAI contains exactly 19 enum values (no aliases):
+```json
+{
+    "evidence_type": {
+        "type": "string",
+        "enum": [
+            "workplace_safety", "discrimination", "harassment", "policy_violation",
+            "negligence", "premises_liability", "product_defect", "medical_evidence",
+            "crime_scene", "evidence_tampering", "forensic_evidence", "witness_evidence",
+            "contract_breach", "property_damage", "documentation", "procedural_violation",
+            "regulatory_violation", "compliance_failure", "critical_violation"
+        ],
+        "description": "Primary legal category"
+    }
+}
+```
+
+**Usage Examples:**
+
+✅ **Working in Python Code:**
+```python
+# Both of these work in Python:
+evidence_type = EvidenceType.workplace_safety
+evidence_type = EvidenceType.health_safety  # Alias, same as workplace_safety
+
+# Check enum values
+print(EvidenceType.health_safety.value)  # Output: "workplace_safety"
+print(EvidenceType.cleanliness.value)    # Output: "workplace_safety"
+```
+
+✅ **OpenAI API Returns:**
+```python
+# OpenAI will only return actual enum values:
+response_data = {
+    "evidence_type": "workplace_safety",  # ✅ Valid
+    "severity_level": "high"
+}
+
+# OpenAI will NEVER return:
+# "evidence_type": "health_safety"  # ❌ This would cause validation error
+```
+
+**Why This Distinction Matters:**
+
+1. **API Integration**: Third-party integrations using the OpenAI schema must use the 19 official values
+2. **Validation Reliability**: Pydantic validation now works consistently without alias-related errors
+3. **Backwards Compatibility**: Existing Python code using aliases continues to work
+4. **Legal Compliance**: Ensures consistent evidence categorization across all analysis outputs
 
 #### `LegalDomain`
 

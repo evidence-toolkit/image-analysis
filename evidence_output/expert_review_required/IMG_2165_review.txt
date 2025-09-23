@@ -1,0 +1,15 @@
+EXPERT REVIEW REQUIRED
+=====================
+
+Image: IMG_2165.JPEG
+Review Reason: Immediate action required
+Confidence Score: 0.90
+Severity: high
+Evidence Type: workplace_safety
+
+Key Points for Review:
+- Legal Relevance: The image shows unsanitary conditions in a food storage or retail environment, which violates health and safety regulations under workplace safety laws, including the Health & Safety at Work Act. The ...
+- Evidence Strength: Strong visual evidence of non-compliance with workplace hygiene and safety standards, suitable for supporting claims of regulatory violations and workplace safety breaches....
+- Immediate Action: Yes
+
+Full analysis available in: workplace_safety_violations/IMG_2165.txt

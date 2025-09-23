@@ -1,0 +1,27 @@
+LEGAL EVIDENCE ANALYSIS
+=====================
+
+Image: IMG_2162.JPEG
+Evidence Type: EvidenceType.workplace_safety
+Severity: SeverityLevel.high
+Confidence Score: 0.90
+
+⚠️  EXPERT REVIEW REQUIRED
+Review Reason: Required for employment_law domain
+
+Legal Relevance:
+The image shows a packaged meat product leaking fluid onto a store shelf, which may indicate improper handling or storage practices that violate food safety and workplace hygiene regulations under the Health & Safety at Work Act and food safety standards.
+
+Compliance Violations:
+Potential violations include failure to maintain proper refrigeration and containment of raw meat products, leading to contamination risks and unsafe working conditions for employees handling these products.
+
+Expert Witness Notes:
+The visible leakage of meat juices onto the shelf surface suggests inadequate packaging integrity or mishandling during stocking. This creates a contamination hazard and increases the risk of slips or exposure to biological hazards for workers and customers.
+
+Immediate Action Required: Yes
+
+Evidence Strength:
+Strong visual evidence of a safety and hygiene issue relevant to workplace safety and regulatory compliance.
+
+Supporting Documentation Needed:
+Temperature logs for refrigeration units, cleaning and maintenance records for shelving, employee training records on food safety protocols, and incident reports related to contamination or workplace injuries.

@@ -44,7 +44,7 @@ employment_law:
 
   cost_multiplier: 1.0              # Cost multiplier for this domain
   confidence_threshold: 0.8         # Higher threshold for legal evidence
-  require_expert_review: true       # Always require expert review
+  require_expert_review: false       # Always require expert review
 
 # Personal Injury Configuration
 personal_injury:

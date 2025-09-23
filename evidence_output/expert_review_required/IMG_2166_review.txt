@@ -1,0 +1,15 @@
+EXPERT REVIEW REQUIRED
+=====================
+
+Image: IMG_2166.JPEG
+Review Reason: Immediate action required
+Confidence Score: 0.90
+Severity: high
+Evidence Type: workplace_safety
+
+Key Points for Review:
+- Legal Relevance: The image shows packaged meat with a use-by date of 31 January stored in a refrigerator that appears to be dirty and poorly maintained, which may violate food safety and workplace hygiene regulations ...
+- Evidence Strength: Strong photographic evidence showing unsanitary conditions that can be used to support claims of health and safety violations in the workplace....
+- Immediate Action: Yes
+
+Full analysis available in: workplace_safety_violations/IMG_2166.txt
