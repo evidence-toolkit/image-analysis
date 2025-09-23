@@ -1,0 +1,74 @@
+# Image Evidence Analyzer - Default Configuration
+# This file contains default settings for the Legal Evidence Analysis System
+
+# OpenAI API Configuration
+openai:
+  model: "gpt-4.1-mini"           # OpenAI model for analysis
+  cost_per_image: 0.0014          # Estimated cost per image analysis (USD)
+  max_tokens: null                # Max tokens per request (null = model default)
+  temperature: 0.1                # Lower temperature for consistent legal analysis
+  timeout: 60                     # Request timeout in seconds
+
+# Performance Configuration
+performance:
+  max_workers: 3                  # Max concurrent API calls
+  default_parallel_batches: 2     # Default number of parallel processing batches
+  max_parallel_batches: 8         # Maximum allowed parallel batches
+  request_delay: 0.1              # Delay between requests to respect rate limits (seconds)
+
+# File Processing Configuration
+file_processing:
+  supported_extensions:           # Supported image file extensions
+    - .jpg
+    - .jpeg
+    - .png
+    - .bmp
+    - .tiff
+    - .webp
+    - .gif
+  max_file_size_mb: 20           # Maximum file size in MB
+  image_quality_threshold: 0.3   # Minimum image quality score (0.0-1.0)
+
+# Output Configuration
+output:
+  default_directory: "./evidence"     # Default output directory
+  create_summary_report: true         # Generate summary reports
+  create_json_output: false          # Generate JSON output by default
+  include_timestamps: true            # Include timestamps in filenames
+  preserve_originals: true            # Keep copies of original images
+
+# Legal Framework Configuration
+legal:
+  default_domain: "employment_law"    # Default legal domain
+  require_confirmation: true          # Require user confirmation before analysis
+  chain_of_custody: true             # Enable chain of custody tracking
+  audit_logging: true                # Enable detailed audit logging
+
+# Cost Control Configuration
+cost_control:
+  max_daily_cost: 50.0              # Maximum daily spending limit (USD)
+  warning_threshold: 10.0           # Cost warning threshold (USD)
+  confirm_above_cost: 5.0           # Require confirmation above this cost (USD)
+  track_usage: true                 # Enable usage tracking
+
+# Analysis Configuration
+analysis:
+  confidence_threshold: 0.7         # Minimum confidence for evidence classification
+  require_expert_review: false      # Flag high-severity items for expert review
+  enable_preprocessing: false       # Enable image preprocessing (enhancement, etc.)
+  max_retries: 2                   # Maximum retries for failed analyses
+
+# Logging Configuration
+logging:
+  level: "INFO"                    # Log level: DEBUG, INFO, WARNING, ERROR
+  enable_file_logging: true       # Enable logging to file
+  log_directory: "./logs"          # Log file directory
+  max_log_size_mb: 10             # Maximum log file size before rotation
+  backup_count: 5                 # Number of backup log files to keep
+
+# Security Configuration
+security:
+  sanitize_filenames: true         # Sanitize filenames for security
+  validate_file_types: true       # Validate file types beyond extensions
+  max_path_length: 255            # Maximum file path length
+  restrict_output_paths: true     # Restrict output to safe directories

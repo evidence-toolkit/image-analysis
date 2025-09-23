@@ -1,0 +1,218 @@
+# Legal Domain-Specific Configuration
+# This file defines settings specific to different legal domains
+
+# Employment Law Configuration
+employment_law:
+  evidence_types:
+    - workplace_safety
+    - discrimination
+    - harassment
+    - policy_violation
+    - critical_violation
+
+  directory_structure:
+    - critical_violations
+    - workplace_safety_violations
+    - discrimination_evidence
+    - documentation
+
+  analysis_prompts:
+    system_prompt: |
+      You are a forensic image analyst specializing in employment law evidence.
+
+      Analyze this image with the expertise of a professional forensic examiner
+      preparing evidence for employment law proceedings.
+
+      Focus on:
+      - Health & Safety at Work Act violations
+      - Workplace discrimination evidence
+      - Harassment documentation
+      - Policy violations
+      - Regulatory compliance issues
+      - Documentation and record-keeping problems
+
+      Provide thorough, objective analysis suitable for employment law proceedings.
+
+  cost_multiplier: 1.0              # Cost multiplier for this domain
+  confidence_threshold: 0.8         # Higher threshold for legal evidence
+  require_expert_review: true       # Always require expert review
+
+# Personal Injury Configuration
+personal_injury:
+  evidence_types:
+    - negligence
+    - premises_liability
+    - product_defect
+    - medical_evidence
+    - critical_violation
+
+  directory_structure:
+    - critical_violations
+    - negligence_evidence
+    - premises_liability
+    - medical_evidence
+    - documentation
+
+  analysis_prompts:
+    system_prompt: |
+      You are a forensic image analyst specializing in personal injury evidence.
+
+      Analyze this image with the expertise of a professional forensic examiner
+      preparing evidence for personal injury litigation.
+
+      Focus on:
+      - Negligence evidence
+      - Premises liability conditions
+      - Product defects or failures
+      - Medical evidence documentation
+      - Accident scene analysis
+      - Safety hazards and violations
+
+      Provide thorough, objective analysis suitable for personal injury litigation.
+
+  cost_multiplier: 1.2              # Higher cost for detailed medical analysis
+  confidence_threshold: 0.85        # Very high threshold for PI cases
+  require_expert_review: true
+
+# Criminal Law Configuration
+criminal_law:
+  evidence_types:
+    - crime_scene
+    - evidence_tampering
+    - forensic_evidence
+    - witness_evidence
+    - critical_violation
+
+  directory_structure:
+    - critical_evidence
+    - crime_scene_evidence
+    - forensic_evidence
+    - witness_evidence
+    - documentation
+
+  analysis_prompts:
+    system_prompt: |
+      You are a forensic image analyst specializing in criminal evidence.
+
+      Analyze this image with the expertise of a professional forensic examiner
+      preparing evidence for criminal proceedings.
+
+      Focus on:
+      - Crime scene documentation
+      - Evidence tampering indicators
+      - Forensic evidence preservation
+      - Witness evidence corroboration
+      - Chain of custody considerations
+      - Criminal activity indicators
+
+      Provide thorough, objective analysis suitable for criminal court proceedings.
+
+  cost_multiplier: 1.5              # Highest cost for forensic detail
+  confidence_threshold: 0.9         # Highest threshold for criminal cases
+  require_expert_review: true
+  chain_of_custody_required: true   # Mandatory for criminal evidence
+
+# Civil Litigation Configuration
+civil_litigation:
+  evidence_types:
+    - contract_breach
+    - property_damage
+    - documentation
+    - procedural_violation
+
+  directory_structure:
+    - contract_evidence
+    - property_damage
+    - procedural_evidence
+    - documentation
+
+  analysis_prompts:
+    system_prompt: |
+      You are a forensic image analyst specializing in civil litigation evidence.
+
+      Analyze this image with the expertise of a professional forensic examiner
+      preparing evidence for civil court proceedings.
+
+      Focus on:
+      - Contract breach evidence
+      - Property damage documentation
+      - Procedural violations
+      - Documentation authenticity
+      - Compliance with civil procedures
+      - Damages assessment support
+
+      Provide thorough, objective analysis suitable for civil litigation.
+
+  cost_multiplier: 0.8              # Lower cost for civil cases
+  confidence_threshold: 0.75        # Standard threshold
+  require_expert_review: false
+
+# Regulatory Compliance Configuration
+regulatory_compliance:
+  evidence_types:
+    - regulatory_violation
+    - compliance_failure
+    - documentation
+    - critical_violation
+
+  directory_structure:
+    - critical_violations
+    - regulatory_violations
+    - compliance_failures
+    - documentation
+
+  analysis_prompts:
+    system_prompt: |
+      You are a forensic image analyst specializing in regulatory compliance evidence.
+
+      Analyze this image with the expertise of a professional forensic examiner
+      preparing evidence for regulatory proceedings.
+
+      Focus on:
+      - Regulatory violations
+      - Compliance failures
+      - Industry standard deviations
+      - Documentation deficiencies
+      - Safety standard violations
+      - Procedural non-compliance
+
+      Provide thorough, objective analysis suitable for regulatory proceedings.
+
+  cost_multiplier: 1.1              # Slightly higher for regulatory detail
+  confidence_threshold: 0.8
+  require_expert_review: true
+
+# Family Law Configuration
+family_law:
+  evidence_types:
+    - documentation
+    - procedural_violation
+    - property_damage
+
+  directory_structure:
+    - evidence
+    - property_documentation
+    - procedural_evidence
+    - documentation
+
+  analysis_prompts:
+    system_prompt: |
+      You are a forensic image analyst specializing in family law evidence.
+
+      Analyze this image with the expertise of a professional forensic examiner
+      preparing evidence for family court proceedings.
+
+      Focus on:
+      - Property condition documentation
+      - Living environment assessment
+      - Safety concerns for minors
+      - Procedural evidence
+      - Documentation authenticity
+      - Custody-related evidence
+
+      Provide thorough, objective analysis suitable for family law proceedings.
+
+  cost_multiplier: 0.9              # Lower cost for family law
+  confidence_threshold: 0.75
+  require_expert_review: false
+  privacy_enhanced: true            # Extra privacy controls for family cases

@@ -1,0 +1,143 @@
+# Environment-Specific Configuration
+# This file defines different configurations for different deployment environments
+
+# Development Environment
+development:
+  openai:
+    model: "gpt-4.1-mini"          # Use cheaper model for dev
+    cost_per_image: 0.0014
+    timeout: 30
+
+  performance:
+    max_workers: 2                 # Limit concurrent requests in dev
+    default_parallel_batches: 1
+    request_delay: 0.5             # Slower requests in dev
+
+  cost_control:
+    max_daily_cost: 5.0           # Low limit for development
+    warning_threshold: 2.0
+    confirm_above_cost: 1.0
+
+  logging:
+    level: "DEBUG"                # Verbose logging for development
+    enable_file_logging: true
+
+  security:
+    validate_file_types: false    # Relaxed validation in dev
+
+# Testing Environment
+testing:
+  openai:
+    model: "gpt-4.1-mini"
+    cost_per_image: 0.0014
+    timeout: 45
+
+  performance:
+    max_workers: 1                # Single threaded for predictable tests
+    default_parallel_batches: 1
+    request_delay: 1.0            # Slow for test reliability
+
+  cost_control:
+    max_daily_cost: 2.0           # Very low limit for testing
+    warning_threshold: 1.0
+    confirm_above_cost: 0.5
+
+  output:
+    create_summary_report: false  # Skip reports in tests
+    preserve_originals: false     # Save space in tests
+
+  logging:
+    level: "WARNING"              # Minimal logging in tests
+
+# Production Environment
+production:
+  openai:
+    model: "gpt-4o"               # Use best model in production
+    cost_per_image: 0.015         # Higher cost for gpt-4o
+    timeout: 90
+    temperature: 0.05             # Very low temperature for consistency
+
+  performance:
+    max_workers: 6                # Higher concurrency for production
+    default_parallel_batches: 4
+    request_delay: 0.05           # Faster processing
+
+  cost_control:
+    max_daily_cost: 500.0         # Higher limits for production
+    warning_threshold: 100.0
+    confirm_above_cost: 50.0
+
+  analysis:
+    confidence_threshold: 0.85    # Higher confidence in production
+    require_expert_review: true   # Always require review in prod
+    max_retries: 3                # More retries for reliability
+
+  logging:
+    level: "INFO"
+    enable_file_logging: true
+    max_log_size_mb: 50           # Larger logs in production
+    backup_count: 10
+
+  security:
+    sanitize_filenames: true      # Full security in production
+    validate_file_types: true
+    restrict_output_paths: true
+
+# Legal Production Environment (High Security)
+legal_production:
+  extends: "production"           # Inherit from production
+
+  openai:
+    model: "gpt-4o"
+    temperature: 0.0              # Absolutely consistent results
+
+  legal:
+    chain_of_custody: true        # Mandatory chain of custody
+    audit_logging: true           # Full audit trail
+    require_confirmation: true
+
+  analysis:
+    confidence_threshold: 0.9     # Highest confidence required
+    require_expert_review: true
+    max_retries: 5                # Maximum reliability
+
+  cost_control:
+    track_usage: true             # Full usage tracking
+
+  security:
+    # Maximum security settings
+    sanitize_filenames: true
+    validate_file_types: true
+    restrict_output_paths: true
+    max_path_length: 200          # Conservative path limits
+
+  logging:
+    level: "INFO"
+    enable_file_logging: true
+    # Never rotate logs in legal production - preserve everything
+    max_log_size_mb: 1000
+    backup_count: 100
+
+# Demo Environment
+demo:
+  openai:
+    model: "gpt-4.1-mini"
+    cost_per_image: 0.0014
+
+  performance:
+    max_workers: 1                # Single threaded for demos
+    default_parallel_batches: 1
+
+  cost_control:
+    max_daily_cost: 1.0          # Very low limit for demos
+    warning_threshold: 0.5
+    confirm_above_cost: 0.25
+
+  output:
+    default_directory: "./demo_output"
+    create_summary_report: true
+    create_json_output: true     # Always create JSON for demos
+
+  logging:
+    level: "INFO"
+    enable_file_logging: false   # No file logging for demos
