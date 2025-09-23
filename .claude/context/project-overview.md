@@ -1,98 +1,124 @@
-# Claude-Stuff Project Overview
+# Image Evidence Analyzer Project Overview
 
-## Current Project: DotMgr - CLI Dotfiles Management Tool
+## Current Project: Image Evidence Analyzer Configuration Integration
 
 ### Project Description
-DotMgr is a zero-configuration CLI tool for managing dotfiles that follows a "convention over configuration" philosophy. Unlike existing tools like chezmoi, GNU Stow, or dotbot, DotMgr requires no setup files while providing intelligent auto-discovery, automatic backups, and built-in git integration.
+The Image Evidence Analyzer is an AI-powered forensic image analysis tool specialized for UK employment law evidence processing. This project focuses on integrating a comprehensive configuration system to enhance flexibility, maintainability, and operational robustness while preserving the tool's legal compliance focus.
 
 ### Core Value Proposition
-- **Zero Configuration**: No YAML, TOML, or config files required
-- **Safety First**: Automatic backups before any changes
-- **Smart Discovery**: Automatically finds common dotfiles
-- **Single Binary**: Rust-compiled executable with no dependencies
-- **Git Integration**: Built-in version control for dotfiles
+- **Legal Specialization**: Expert-level analysis for UK employment law violations
+- **Structured Evidence**: Guaranteed JSON schema compliance for court admissibility
+- **Cost Efficiency**: Optimized parallel processing (~$0.0014 per image)
+- **Evidence Chain**: Forensic-quality documentation and source tracking
+- **Configurable Operation**: Flexible configuration without compromising legal standards
 
 ### Goals
-- **Primary**: Create a dotfiles manager that "just works" without complex setup
-- **Secondary**: Provide safe, reversible operations that never lose user data
-- **Tertiary**: Demonstrate superior simplicity compared to existing complex tools
+- **Primary**: Integrate comprehensive configuration system while maintaining legal compliance
+- **Secondary**: Enable environment-specific operation and advanced retry mechanisms
+- **Tertiary**: Provide configurable output formats and expert review workflows
 
 ### Target Users
-- **Primary**: Developers who want simple dotfiles management
-- **Secondary**: System administrators managing multiple machines
-- **Tertiary**: Power users transitioning from manual symlink management
+- **Primary**: Legal professionals processing employment law evidence
+- **Secondary**: Workplace safety investigators and compliance officers
+- **Tertiary**: Forensic analysts requiring structured evidence documentation
 
 ## Technical Architecture
 
 ### Technology Stack
-- **Language**: Rust (single binary, performance, memory safety)
-- **CLI Framework**: clap for argument parsing and help generation
-- **File Operations**: std::fs with comprehensive error handling
-- **Git Integration**: git2 crate for repository operations
-- **Configuration**: Optional TOML for advanced users
+- **Core AI**: OpenAI GPT-4 Vision API with structured outputs
+- **Data Validation**: Pydantic models for guaranteed schema compliance
+- **Configuration**: YAML-based hierarchical configuration system
+- **Parallel Processing**: ThreadPoolExecutor with cost tracking
+- **CLI Framework**: Click for command-line interface
+- **Image Processing**: Pillow for format support
+
+### Configuration System Architecture
+```
+config/
+├── analysis.yaml          # Core analysis parameters
+├── legal_domains.yaml     # UK employment law frameworks
+├── output.yaml           # Display and reporting settings
+└── environments/         # Environment-specific overrides
+    ├── development.yaml
+    ├── production.yaml
+    └── testing.yaml
+```
 
 ### Core Components
-1. **Discovery Engine**: Scans home directory for common dotfiles
-2. **Backup System**: Creates safe backups before any modifications
-3. **Repository Manager**: Handles git operations for dotfile storage
-4. **Symlink Manager**: Creates and maintains symlinks between repo and home
-5. **Status Reporter**: Shows current state of managed vs unmanaged files
+1. **ConfigManager**: Centralized configuration loading with smart fallbacks
+2. **LegalEvidenceAnalyzer**: AI-powered analysis engine with structured outputs
+3. **OutputFormatter**: Configurable display system with multiple output modes
+4. **EvidenceOrganizer**: Automated evidence categorization and documentation
+5. **Cost Tracker**: Thread-safe cost monitoring across parallel operations
 
 ### Key Design Principles
-- **Convention over Configuration**: Smart defaults, minimal setup required
-- **Safety First**: Always backup, never destructive operations
-- **Transparency**: Clear status reporting, obvious what the tool is doing
-- **Reversibility**: Easy to undo any operation
-
-## Success Metrics
-- **Usability**: New user can manage dotfiles in under 5 minutes
-- **Safety**: Zero data loss incidents during normal operation
-- **Adoption**: Simpler than existing tools for 80% of use cases
-- **Reliability**: Works consistently across Linux, macOS, and Windows
-
-## Key Assumptions
-- Users want git-based dotfile management
-- Symlinks are acceptable on target platforms
-- Home directory scanning is acceptable for discovery
-- Users prefer opinionated defaults over endless configuration
-
-## Constraints
-- Must work without network access after initial setup
-- Single binary distribution preferred
-- No external dependencies beyond git
-- Cross-platform compatibility required
+- **Legal Compliance**: Maintain UK employment law specialization standards
+- **Backward Compatibility**: Smart fallbacks preserve existing API contracts
+- **Configuration Flexibility**: Environment-aware operation without code changes
+- **Evidence Integrity**: Forensic-quality documentation and chain of custody
+- **Operational Robustness**: Advanced retry logic and error handling
 
 ## Development Phases
 
-### Phase 1: MVP (Minimum Viable Product)
-Core commands: init, add, status, sync
-Basic safety and backup features
-Local git repository management
+### Phase 1: Core Configuration Integration ✅ COMPLETED
+- Implemented YAML-based configuration system
+- Created ConfigManager class for centralized handling
+- Added smart fallback mechanisms for compatibility
+- Integrated configuration loading throughout codebase
 
-### Phase 2: Polish and Reliability
-Comprehensive error handling
-Cross-platform testing
-Performance optimization
-Documentation and examples
+### Phase 2.1: Legal Domain Configuration Migration ✅ COMPLETED
+- Migrated hardcoded legal frameworks to YAML files
+- Created structured legal domain mappings
+- Implemented flexible legal context loading
+- Maintained expert witness quality standards
 
-### Phase 3: Advanced Features
-Environment profiles (work/personal/server)
-Template system for common configurations
-Team sharing capabilities
-Integration with popular dotfile repositories
+### Phase 2.2: Enhanced Output Configuration System ✅ COMPLETED
+- Developed OutputFormatter class for flexible display
+- Added multiple output formats (JSON, text, summary)
+- Implemented configurable detail levels
+- Created flexible report generation
+
+### Phase 3: Environment-Aware Operation 🔄 IN PROGRESS
+Current focus on operational enhancements:
+- Advanced retry logic with exponential backoff
+- Configurable confidence thresholds
+- Expert review requirement configuration
+- Audit logging and chain of custody tracking
+
+## Success Metrics
+- **Legal Compliance**: Maintain 100% UK employment law framework coverage
+- **Configuration Flexibility**: Support environment-specific operation without code changes
+- **Performance**: Preserve ~$0.0014 per image cost efficiency
+- **Reliability**: Implement robust retry mechanisms for production deployment
+
+## Key Technical Constraints
+- **Legal Framework**: Must maintain UK employment law specialization
+- **Structured Output**: Pydantic models guarantee consistent legal evidence format
+- **API Integration**: OpenAI GPT-4 Vision API with structured output enforcement
+- **Cost Management**: Thread-safe tracking across parallel operations
+- **Evidence Chain**: Source file tracking and court-ready documentation
+
+## Configuration System Features
+- **Hierarchical Loading**: Environment-specific overrides with fallbacks
+- **Smart Defaults**: Backward compatibility with existing deployments
+- **Legal Domain Mapping**: Configurable UK employment law frameworks
+- **Output Customization**: Flexible formatting and report generation
+- **Operational Control**: Configurable retry logic and error handling
+
+## Legal Compliance Framework
+Specialized for UK employment law violations:
+- Health & Safety at Work Act 1974
+- Workplace (Health, Safety and Welfare) Regulations 1992
+- Management of Health and Safety at Work Regulations 1999
+- Control of Substances Hazardous to Health Regulations 2002
+- Food Safety and Hygiene Regulations
 
 ## Risk Mitigation
-- **Data Loss**: Comprehensive backup system, never modify originals without backup
-- **Platform Issues**: Extensive cross-platform testing in CI
-- **User Error**: Clear confirmation prompts for destructive operations
-- **Complexity Creep**: Strict focus on MVP features first, resist feature bloat
-
-## Project Management System (Meta)
-This project uses the Claude Code native project management system:
-- **Sub-agents**: project-starter, task-tracker, context-manager, sync-agent
-- **Slash commands**: /idea, /tasks, /focus, /sync
-- **Context management**: Structured .claude/context/ directory
-- **Task tracking**: Built on Claude Code's TodoWrite tool
+- **Configuration Errors**: Comprehensive validation with informative error messages
+- **Legal Compliance**: Maintain hardcoded fallbacks for critical legal frameworks
+- **API Reliability**: Advanced retry logic with exponential backoff
+- **Evidence Integrity**: Immutable source tracking and audit logging
+- **Backward Compatibility**: Smart fallbacks preserve existing API contracts
 
 ---
-*Last updated: 2025-09-17 - New DotMgr project initiation*
+*Last updated: 2025-09-23 - Configuration integration project with Phase 3 in progress*

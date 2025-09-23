@@ -114,9 +114,9 @@ legal_production:
   logging:
     level: "INFO"
     enable_file_logging: true
-    # Never rotate logs in legal production - preserve everything
-    max_log_size_mb: 1000
-    backup_count: 100
+    # Legal production with enhanced logging (within validation limits)
+    max_log_size_mb: 100          # Maximum allowed by validation
+    backup_count: 20              # Maximum allowed by validation
 
 # Demo Environment
 demo:

@@ -16,6 +16,15 @@ employment_law:
     - discrimination_evidence
     - documentation
 
+  evidence_type_mapping:
+    workplace_safety: workplace_safety_violations
+    health_safety: workplace_safety_violations  # backwards compatibility
+    cleanliness: workplace_safety_violations    # backwards compatibility
+    discrimination: discrimination_evidence
+    harassment: discrimination_evidence
+    policy_violation: workplace_safety_violations
+    critical_violation: critical_violations
+
   analysis_prompts:
     system_prompt: |
       You are a forensic image analyst specializing in employment law evidence.
@@ -52,6 +61,13 @@ personal_injury:
     - premises_liability
     - medical_evidence
     - documentation
+
+  evidence_type_mapping:
+    negligence: negligence_evidence
+    premises_liability: premises_liability
+    product_defect: negligence_evidence
+    medical_evidence: medical_evidence
+    critical_violation: critical_violations
 
   analysis_prompts:
     system_prompt: |
@@ -90,6 +106,13 @@ criminal_law:
     - witness_evidence
     - documentation
 
+  evidence_type_mapping:
+    crime_scene: crime_scene_evidence
+    evidence_tampering: critical_evidence
+    forensic_evidence: forensic_evidence
+    witness_evidence: witness_evidence
+    critical_violation: critical_evidence
+
   analysis_prompts:
     system_prompt: |
       You are a forensic image analyst specializing in criminal evidence.
@@ -126,6 +149,11 @@ civil_litigation:
     - procedural_evidence
     - documentation
 
+  evidence_type_mapping:
+    contract_breach: contract_evidence
+    property_damage: property_damage
+    procedural_violation: procedural_evidence
+
   analysis_prompts:
     system_prompt: |
       You are a forensic image analyst specializing in civil litigation evidence.
@@ -161,6 +189,11 @@ regulatory_compliance:
     - compliance_failures
     - documentation
 
+  evidence_type_mapping:
+    regulatory_violation: regulatory_violations
+    compliance_failure: compliance_failures
+    critical_violation: critical_violations
+
   analysis_prompts:
     system_prompt: |
       You are a forensic image analyst specializing in regulatory compliance evidence.
@@ -194,6 +227,10 @@ family_law:
     - property_documentation
     - procedural_evidence
     - documentation
+
+  evidence_type_mapping:
+    property_damage: property_documentation
+    procedural_violation: procedural_evidence
 
   analysis_prompts:
     system_prompt: |

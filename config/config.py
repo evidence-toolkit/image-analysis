@@ -7,8 +7,8 @@ Handles loading and merging of configuration files
 import os
 import yaml
 from pathlib import Path
-from typing import Dict, Any, Optional
-from dataclasses import dataclass, field
+from typing import Dict, Any, Optional, List
+from pydantic import BaseModel, Field, validator
 from enum import Enum
 
 
@@ -21,103 +21,159 @@ class Environment(str, Enum):
     DEMO = "demo"
 
 
-@dataclass
-class OpenAIConfig:
+class OpenAIConfig(BaseModel):
     """OpenAI API configuration"""
-    model: str = "gpt-4.1-mini"
-    cost_per_image: float = 0.0014
-    max_tokens: Optional[int] = None
-    temperature: float = 0.1
-    timeout: int = 60
+    model: str = Field(default="gpt-4.1-mini", description="OpenAI model for analysis")
+    cost_per_image: float = Field(default=0.0014, ge=0.0, description="Estimated cost per image analysis (USD)")
+    max_tokens: Optional[int] = Field(default=None, ge=1, description="Max tokens per request")
+    temperature: float = Field(default=0.1, ge=0.0, le=2.0, description="Model temperature for consistency")
+    timeout: int = Field(default=60, ge=1, description="Request timeout in seconds")
+
+    @validator('model')
+    def validate_model(cls, v):
+        valid_models = ['gpt-4.1-mini', 'gpt-4o', 'gpt-4o-mini', 'gpt-4']
+        if v not in valid_models:
+            raise ValueError(f'Model must be one of {valid_models}')
+        return v
 
 
-@dataclass
-class PerformanceConfig:
+class PerformanceConfig(BaseModel):
     """Performance and concurrency configuration"""
-    max_workers: int = 3
-    default_parallel_batches: int = 2
-    max_parallel_batches: int = 8
-    request_delay: float = 0.1
+    max_workers: int = Field(default=3, ge=1, le=10, description="Max concurrent API calls")
+    default_parallel_batches: int = Field(default=2, ge=1, le=8, description="Default number of parallel processing batches")
+    max_parallel_batches: int = Field(default=8, ge=1, le=20, description="Maximum allowed parallel batches")
+    request_delay: float = Field(default=0.1, ge=0.0, description="Delay between requests to respect rate limits (seconds)")
 
 
-@dataclass
-class FileProcessingConfig:
+class FileProcessingConfig(BaseModel):
     """File processing configuration"""
-    supported_extensions: list = field(default_factory=lambda: [
-        '.jpg', '.jpeg', '.png', '.bmp', '.tiff', '.webp', '.gif'
-    ])
-    max_file_size_mb: int = 20
-    image_quality_threshold: float = 0.3
+    supported_extensions: List[str] = Field(
+        default=['.jpg', '.jpeg', '.png', '.bmp', '.tiff', '.webp', '.gif'],
+        description="Supported image file extensions"
+    )
+    max_file_size_mb: int = Field(default=20, ge=1, le=100, description="Maximum file size in MB")
+    image_quality_threshold: float = Field(default=0.3, ge=0.0, le=1.0, description="Minimum image quality score (0.0-1.0)")
 
 
-@dataclass
-class OutputConfig:
+class OutputConfig(BaseModel):
     """Output configuration"""
-    default_directory: str = "./evidence"
-    create_summary_report: bool = True
-    create_json_output: bool = False
-    include_timestamps: bool = True
-    preserve_originals: bool = True
+    default_directory: str = Field(default="./evidence", description="Default output directory")
+    create_summary_report: bool = Field(default=True, description="Generate summary reports")
+    create_json_output: bool = Field(default=False, description="Generate JSON output by default")
+    include_timestamps: bool = Field(default=True, description="Include timestamps in filenames")
+    preserve_originals: bool = Field(default=True, description="Keep copies of original images")
+
+    # Formatting Configuration
+    json_indent: int = Field(default=2, ge=0, description="JSON indentation spaces")
+    cost_decimal_places: int = Field(default=2, ge=0, le=10, description="Decimal places for cost display")
+    cost_precision_places: int = Field(default=4, ge=0, le=10, description="Decimal places for precise costs")
+    summary_truncation: int = Field(default=100, ge=10, description="Characters to show in summaries")
+
+    # Progress Indicators Configuration
+    use_emojis: bool = Field(default=True, description="Enable emoji progress indicators")
+    success_icon: str = Field(default="✓", description="Success indicator")
+    error_icon: str = Field(default="❌", description="Error indicator")
+    info_icon: str = Field(default="🔍", description="Information indicator")
+    cost_icon: str = Field(default="💰", description="Cost indicator")
+    folder_icon: str = Field(default="📁", description="Folder indicator")
+    processing_icon: str = Field(default="🔄", description="Processing indicator")
 
 
-@dataclass
-class LegalConfig:
+class LegalConfig(BaseModel):
     """Legal framework configuration"""
-    default_domain: str = "employment_law"
-    require_confirmation: bool = True
-    chain_of_custody: bool = True
-    audit_logging: bool = True
+    default_domain: str = Field(default="employment_law", description="Default legal domain")
+    require_confirmation: bool = Field(default=True, description="Require user confirmation before analysis")
+    chain_of_custody: bool = Field(default=True, description="Enable chain of custody tracking")
+    audit_logging: bool = Field(default=True, description="Enable detailed audit logging")
+
+    # Audit Logging Configuration
+    audit_log_file: str = Field(default="audit.log", description="Audit log filename")
+    audit_log_format: str = Field(default="json", description="Format: json, text, or structured")
+    include_full_analysis: bool = Field(default=False, description="Include complete analysis in audit log")
+    log_api_calls: bool = Field(default=True, description="Log API call details")
+    log_file_operations: bool = Field(default=True, description="Log file copy/move operations")
+    log_cost_tracking: bool = Field(default=True, description="Log cost-related events")
+
+    # Chain of Custody Configuration
+    chain_of_custody_file: str = Field(default="chain_of_custody.json", description="Chain of custody log")
+    include_checksums: bool = Field(default=True, description="Calculate and store file checksums")
+    include_timestamps: bool = Field(default=True, description="Detailed timestamp tracking")
+    include_environment_info: bool = Field(default=True, description="Log system environment details")
+
+    @validator('audit_log_format')
+    def validate_audit_format(cls, v):
+        valid_formats = ['json', 'text', 'structured']
+        if v not in valid_formats:
+            raise ValueError(f'Audit log format must be one of {valid_formats}')
+        return v
+
+    @validator('default_domain')
+    def validate_domain(cls, v):
+        valid_domains = ['employment_law', 'personal_injury', 'criminal_law', 'civil_litigation', 'regulatory_compliance', 'family_law']
+        if v not in valid_domains:
+            raise ValueError(f'Legal domain must be one of {valid_domains}')
+        return v
 
 
-@dataclass
-class CostControlConfig:
+class CostControlConfig(BaseModel):
     """Cost control configuration"""
-    max_daily_cost: float = 50.0
-    warning_threshold: float = 10.0
-    confirm_above_cost: float = 5.0
-    track_usage: bool = True
+    max_daily_cost: float = Field(default=50.0, ge=0.0, description="Maximum daily spending limit (USD)")
+    warning_threshold: float = Field(default=10.0, ge=0.0, description="Cost warning threshold (USD)")
+    confirm_above_cost: float = Field(default=5.0, ge=0.0, description="Require confirmation above this cost (USD)")
+    track_usage: bool = Field(default=True, description="Enable usage tracking")
 
 
-@dataclass
-class AnalysisConfig:
+class AnalysisConfig(BaseModel):
     """Analysis configuration"""
-    confidence_threshold: float = 0.7
-    require_expert_review: bool = False
-    enable_preprocessing: bool = False
-    max_retries: int = 2
+    confidence_threshold: float = Field(default=0.7, ge=0.0, le=1.0, description="Minimum confidence for evidence classification")
+    enable_confidence_filtering: bool = Field(default=True, description="Enable filtering of low-confidence evidence")
+    require_expert_review: bool = Field(default=False, description="Flag high-severity items for expert review")
+    enable_preprocessing: bool = Field(default=False, description="Enable image preprocessing (enhancement, etc.)")
+
+    # Retry Configuration
+    max_retries: int = Field(default=3, ge=0, le=10, description="Maximum retries for failed analyses")
+    retry_delay_base: float = Field(default=1.0, ge=0.0, description="Base delay in seconds for exponential backoff")
+    retry_delay_max: float = Field(default=60.0, ge=1.0, description="Maximum delay between retries (seconds)")
+    retry_on_rate_limit: bool = Field(default=True, description="Retry on rate limit errors")
+    retry_on_timeout: bool = Field(default=True, description="Retry on timeout errors")
+    retry_on_connection_error: bool = Field(default=True, description="Retry on connection errors")
 
 
-@dataclass
-class LoggingConfig:
+class LoggingConfig(BaseModel):
     """Logging configuration"""
-    level: str = "INFO"
-    enable_file_logging: bool = True
-    log_directory: str = "./logs"
-    max_log_size_mb: int = 10
-    backup_count: int = 5
+    level: str = Field(default="INFO", description="Log level: DEBUG, INFO, WARNING, ERROR")
+    enable_file_logging: bool = Field(default=True, description="Enable logging to file")
+    log_directory: str = Field(default="./logs", description="Log file directory")
+    max_log_size_mb: int = Field(default=10, ge=1, le=100, description="Maximum log file size before rotation")
+    backup_count: int = Field(default=5, ge=1, le=20, description="Number of backup log files to keep")
+
+    @validator('level')
+    def validate_log_level(cls, v):
+        valid_levels = ['DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL']
+        if v.upper() not in valid_levels:
+            raise ValueError(f'Log level must be one of {valid_levels}')
+        return v.upper()
 
 
-@dataclass
-class SecurityConfig:
+class SecurityConfig(BaseModel):
     """Security configuration"""
-    sanitize_filenames: bool = True
-    validate_file_types: bool = True
-    max_path_length: int = 255
-    restrict_output_paths: bool = True
+    sanitize_filenames: bool = Field(default=True, description="Sanitize filenames for security")
+    validate_file_types: bool = Field(default=True, description="Validate file types beyond extensions")
+    max_path_length: int = Field(default=255, ge=50, le=4096, description="Maximum file path length")
+    restrict_output_paths: bool = Field(default=True, description="Restrict output to safe directories")
 
 
-@dataclass
-class Config:
+class Config(BaseModel):
     """Main configuration class"""
-    openai: OpenAIConfig = field(default_factory=OpenAIConfig)
-    performance: PerformanceConfig = field(default_factory=PerformanceConfig)
-    file_processing: FileProcessingConfig = field(default_factory=FileProcessingConfig)
-    output: OutputConfig = field(default_factory=OutputConfig)
-    legal: LegalConfig = field(default_factory=LegalConfig)
-    cost_control: CostControlConfig = field(default_factory=CostControlConfig)
-    analysis: AnalysisConfig = field(default_factory=AnalysisConfig)
-    logging: LoggingConfig = field(default_factory=LoggingConfig)
-    security: SecurityConfig = field(default_factory=SecurityConfig)
+    openai: OpenAIConfig = Field(default_factory=OpenAIConfig, description="OpenAI API configuration")
+    performance: PerformanceConfig = Field(default_factory=PerformanceConfig, description="Performance and concurrency settings")
+    file_processing: FileProcessingConfig = Field(default_factory=FileProcessingConfig, description="File processing configuration")
+    output: OutputConfig = Field(default_factory=OutputConfig, description="Output configuration")
+    legal: LegalConfig = Field(default_factory=LegalConfig, description="Legal framework configuration")
+    cost_control: CostControlConfig = Field(default_factory=CostControlConfig, description="Cost control configuration")
+    analysis: AnalysisConfig = Field(default_factory=AnalysisConfig, description="Analysis configuration")
+    logging: LoggingConfig = Field(default_factory=LoggingConfig, description="Logging configuration")
+    security: SecurityConfig = Field(default_factory=SecurityConfig, description="Security configuration")
 
 
 class ConfigManager:
@@ -194,10 +250,8 @@ class ConfigManager:
         return result
 
     def _dict_to_config(self, config_data: Dict[str, Any]) -> Config:
-        """Convert dictionary to Config dataclass"""
-        config = Config()
-
-        # Map configuration sections to dataclass fields
+        """Convert dictionary to Config Pydantic model"""
+        # Map configuration sections to Pydantic model classes
         section_mapping = {
             'openai': OpenAIConfig,
             'performance': PerformanceConfig,
@@ -210,22 +264,30 @@ class ConfigManager:
             'security': SecurityConfig,
         }
 
+        # Process each section with Pydantic validation
+        processed_sections = {}
         for section_name, section_class in section_mapping.items():
             if section_name in config_data:
-                section_data = config_data[section_name]
-                # Create instance with filtered kwargs (only valid fields)
-                valid_fields = {f.name for f in section_class.__dataclass_fields__.values()}
-                filtered_data = {k: v for k, v in section_data.items() if k in valid_fields}
-                setattr(config, section_name, section_class(**filtered_data))
+                try:
+                    # Pydantic automatically validates and filters fields
+                    processed_sections[section_name] = section_class(**config_data[section_name])
+                except Exception as e:
+                    # Log validation error and use defaults
+                    print(f"Warning: Invalid configuration for {section_name}: {e}")
+                    processed_sections[section_name] = section_class()
+            else:
+                # Use default configuration if section is missing
+                processed_sections[section_name] = section_class()
 
-        return config
+        # Create main Config with validated sections
+        return Config(**processed_sections)
 
     def save_user_config(self, config_updates: Dict[str, Any]):
         """Save user configuration overrides"""
         user_config_path = self.config_dir / 'user.yaml'
 
         # Load existing user config if present
-        existing_config = {}
+        existing_config: Dict[str, Any] = {}
         if user_config_path.exists():
             with open(user_config_path, 'r') as f:
                 existing_config = yaml.safe_load(f) or {}

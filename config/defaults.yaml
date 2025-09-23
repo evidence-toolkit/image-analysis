@@ -37,12 +37,41 @@ output:
   include_timestamps: true            # Include timestamps in filenames
   preserve_originals: true            # Keep copies of original images
 
+  # Formatting Configuration
+  json_indent: 2                     # JSON indentation spaces
+  cost_decimal_places: 2             # Decimal places for cost display
+  cost_precision_places: 4           # Decimal places for precise costs
+  summary_truncation: 100            # Characters to show in summaries
+
+  # Progress Indicators Configuration
+  use_emojis: true                   # Enable emoji progress indicators
+  success_icon: "✓"                 # Success indicator
+  error_icon: "❌"                   # Error indicator
+  info_icon: "🔍"                    # Information indicator
+  cost_icon: "💰"                    # Cost indicator
+  folder_icon: "📁"                  # Folder indicator
+  processing_icon: "🔄"             # Processing indicator
+
 # Legal Framework Configuration
 legal:
   default_domain: "employment_law"    # Default legal domain
   require_confirmation: true          # Require user confirmation before analysis
   chain_of_custody: true             # Enable chain of custody tracking
   audit_logging: true                # Enable detailed audit logging
+
+  # Audit Logging Configuration
+  audit_log_file: "audit.log"        # Audit log filename
+  audit_log_format: "json"           # Format: json, text, or structured
+  include_full_analysis: false       # Include complete analysis in audit log
+  log_api_calls: true                # Log API call details
+  log_file_operations: true          # Log file copy/move operations
+  log_cost_tracking: true            # Log cost-related events
+
+  # Chain of Custody Configuration
+  chain_of_custody_file: "chain_of_custody.json"  # Chain of custody log
+  include_checksums: true            # Calculate and store file checksums
+  include_timestamps: true           # Detailed timestamp tracking
+  include_environment_info: true     # Log system environment details
 
 # Cost Control Configuration
 cost_control:
@@ -54,9 +83,17 @@ cost_control:
 # Analysis Configuration
 analysis:
   confidence_threshold: 0.7         # Minimum confidence for evidence classification
+  enable_confidence_filtering: true # Enable filtering of low-confidence evidence
   require_expert_review: false      # Flag high-severity items for expert review
   enable_preprocessing: false       # Enable image preprocessing (enhancement, etc.)
-  max_retries: 2                   # Maximum retries for failed analyses
+
+  # Retry Configuration
+  max_retries: 3                   # Maximum retries for failed analyses
+  retry_delay_base: 1.0            # Base delay in seconds for exponential backoff
+  retry_delay_max: 60.0            # Maximum delay between retries (seconds)
+  retry_on_rate_limit: true        # Retry on rate limit errors
+  retry_on_timeout: true           # Retry on timeout errors
+  retry_on_connection_error: true  # Retry on connection errors
 
 # Logging Configuration
 logging:

@@ -189,14 +189,18 @@ def handle_analyze_command(args) -> int:
     environment = Environment(args.environment) if args.environment else None
     config = get_config(environment)
 
+    # Import the formatter after config is loaded
+    from .core_analyzer import OutputFormatter
+    formatter = OutputFormatter(config)
+
     input_path = Path(args.input_dir)
 
     if not input_path.exists():
-        print(f"❌ Input directory '{input_path}' does not exist")
+        print(formatter.format_progress('error', f"Input directory '{input_path}' does not exist"))
         return 1
 
     if not input_path.is_dir():
-        print(f"❌ '{input_path}' is not a directory")
+        print(formatter.format_progress('error', f"'{input_path}' is not a directory"))
         return 1
 
     # Get API key
@@ -207,20 +211,21 @@ def handle_analyze_command(args) -> int:
     # Count images and estimate cost using configuration
     image_count = count_images(input_path, config)
     if image_count == 0:
-        print(f"❌ No images found in '{input_path}'")
+        print(formatter.format_progress('error', f"No images found in '{input_path}'"))
         return 1
 
     estimated_cost = estimate_cost(image_count, args.legal_domain, config)
 
     # Cost control and confirmation
     if not args.quiet:
-        print(f"🔍 Found {image_count} images")
-        print(f"💰 Estimated cost: ${estimated_cost:.2f}")
+        print(formatter.format_progress('info', f"Found {image_count} images"))
+        print(formatter.format_progress('cost', f"Estimated cost: {formatter.format_cost(estimated_cost)}"))
 
         # Check against configured cost limits
         if config.cost_control.track_usage and estimated_cost > config.cost_control.confirm_above_cost:
             if estimated_cost > config.cost_control.max_daily_cost:
-                print(f"❌ Estimated cost ${estimated_cost:.2f} exceeds daily limit of ${config.cost_control.max_daily_cost:.2f}")
+                error_msg = f"Estimated cost {formatter.format_cost(estimated_cost)} exceeds daily limit of {formatter.format_cost(config.cost_control.max_daily_cost)}"
+                print(formatter.format_progress('error', error_msg))
                 return 1
 
             if not config.legal.require_confirmation:
@@ -258,8 +263,8 @@ def handle_analyze_command(args) -> int:
         if not args.quiet:
             print(f"\n✅ Analysis complete!")
             print(f"   📊 {len(results)} images analyzed")
-            print(f"   💰 Actual cost: ${analyzer.total_cost:.2f}")
-            print(f"   📁 Evidence organized in: {output_path}")
+            print(f"   {formatter.get_icon('cost')} Actual cost: {formatter.format_cost(analyzer.total_cost)}")
+            print(f"   {formatter.get_icon('folder')} Evidence organized in: {output_path}")
 
         # Save JSON output if requested
         if args.json_output:
@@ -276,7 +281,7 @@ def handle_analyze_command(args) -> int:
             }
 
             with open(args.json_output, 'w') as f:
-                json.dump(json_data, f, indent=2)
+                json.dump(json_data, f, indent=config.output.json_indent)
 
             if not args.quiet:
                 print(f"   📄 JSON summary: {args.json_output}")
@@ -353,7 +358,7 @@ def handle_single_command(args) -> int:
             json_data['analysis_cost'] = analyzer.total_cost
 
             with open(args.json_output, 'w') as f:
-                json.dump(json_data, f, indent=2)
+                json.dump(json_data, f, indent=config.output.json_indent)
 
             print(f"   📄 JSON saved: {args.json_output}")
 
