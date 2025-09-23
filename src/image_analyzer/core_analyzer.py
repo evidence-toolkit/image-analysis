@@ -747,8 +747,7 @@ class LegalEvidenceAnalyzer:
                                 "negligence", "premises_liability", "product_defect", "medical_evidence",
                                 "crime_scene", "evidence_tampering", "forensic_evidence", "witness_evidence",
                                 "contract_breach", "property_damage", "documentation", "procedural_violation",
-                                "regulatory_violation", "compliance_failure", "critical_violation",
-                                "health_safety", "cleanliness"
+                                "regulatory_violation", "compliance_failure", "critical_violation"
                             ],
                             "description": "Primary legal category"
                         },
