@@ -64,3 +64,19 @@ Thumbs.db
 /cleanliness_concerns/
 /documentation/
 evidence_summary.txt
+/evidence/
+/evidence_output/
+/test_evidence/
+/test_output_single/
+/single_test/
+test_images/
+
+# Build and cache directories
+.mypy_cache/
+.pytest_cache/
+build/
+dist/
+*.egg-info/
+
+# Wheel files
+*.whl

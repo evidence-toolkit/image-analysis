@@ -33,7 +33,7 @@ image-analyzer single image.jpg
 image-analyzer estimate ./images
 
 # Run with custom output directory
-image-analyzer analyze ./images -o ./evidence_output
+image-analyzer analyze ./images -o ./case_evidence
 ```
 
 ### Testing
@@ -139,7 +139,7 @@ config/
 
 - Environment variables: `OPENAI_API_KEY` required, `IMAGE_ANALYZER_ENV` optional
 - Configuration validation: Pydantic models ensure type safety and value constraints
-- Image formats supported: .jpg, .jpeg, .png, .bmp, .tiff, .webp, .gif
+- Image formats supported: .jpg, .jpeg, .png, .bmp, .tiff
 - Output structure follows legal evidence organization patterns
 - Parallel processing optimized for API rate limits (configurable workers)
 - All analysis results include forensic-quality expert witness notes

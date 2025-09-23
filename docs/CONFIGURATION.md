@@ -88,8 +88,6 @@ file_processing:
     - .png
     - .bmp
     - .tiff
-    - .webp
-    - .gif
   max_file_size_mb: 20           # Maximum file size (1-100 MB)
   image_quality_threshold: 0.3   # Quality threshold (0.0-1.0)
 ```

@@ -183,7 +183,7 @@ Initialize comprehensive audit logging and chain of custody tracking.
 **Example:**
 ```python
 # Enable comprehensive audit logging
-analyzer.initialize_audit_logging(Path("./evidence_output"))
+analyzer.initialize_audit_logging(Path("./case_evidence"))
 
 # All subsequent operations are automatically logged
 results = analyzer.analyze_directory(Path("./images"))
