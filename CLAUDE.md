@@ -2,154 +2,74 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-## Essential Commands
+## Project Overview
 
-### ALWAYS CHECK 'source .venv/bin/activate' 
+This is an Evidence Toolkit for image analysis that provides content-addressed evidence ingestion, deterministic AI analysis using OpenAI's Responses API, and JSON schema validation. The system is designed for legal evidence analysis with strict chain-of-custody tracking.
 
-### ALWAYS USE UV PACKAGE MANAGMENT 'uv add', 'uv pip install', 'uv run...' 
+## Development Commands
 
-### Installation & Setup
+### Environment Setup
 ```bash
-# Install package in development mode
-pip install -e .
-
-# Set up environment
-cp .env.example .env
-# Edit .env with your OpenAI API key
+uv sync  # installs dependencies into .venv using pyproject.toml
+source .venv/bin/activate  # optional for persistent shells
 ```
 
-### Core Commands
+### Core CLI Commands
+The main application is at `image_analysis/cli.py` and all commands use the `uv run` pattern:
+
 ```bash
-# Analyze directory of images
-image-analyzer analyze ./images
+# Get help
+uv run python -m image_analysis.cli --help
 
-# Analyze with parallel processing
-image-analyzer analyze ./images --parallel 4
+# Ingest images (creates content-addressed storage)
+uv run python -m image_analysis.cli ingest /path/to/images --case-id CASE123
 
-# Analyze single image
-image-analyzer single image.jpg
+# Analyze single image by SHA256
+uv run python -m image_analysis.cli analyze <sha256>
 
-# Estimate costs before analysis
-image-analyzer estimate ./images
+# Batch analysis with optional limits
+uv run python -m image_analysis.cli analyze-batch --skip-existing --limit 10
 
-# Run with custom output directory
-image-analyzer analyze ./images -o ./case_evidence
+# Export analysis results
+uv run python -m image_analysis.cli export-json <sha256> output.json
 ```
 
-### Testing
+### Schema Validation
 ```bash
-# Run tests (basic test structure exists)
-python -m pytest tests/
+# Validate single analysis file
+uv run python validate_schema.py evidence/derived/sha256=<hash>/analysis.v1.json
 
-# Test CLI functionality
-image-analyzer version
-image-analyzer estimate examples/sample_images/
+# Validate all analysis files (CI/pipeline hook)
+scripts/validate_analyses.sh
 ```
 
-## Architecture Overview
+## Architecture
 
-This is an AI-powered forensic image analysis tool for UK employment law evidence processing. The codebase follows a clean V2 architecture:
+### Content-Addressed Storage
+Evidence is stored by SHA256 hash in a structured layout:
+- `evidence/raw/sha256=<hash>/original.<ext>` - Original files
+- `evidence/derived/sha256=<hash>/` - Metadata, EXIF, analysis results
+- `evidence/labels/<label>/` - Hard links organized by detected labels
+- `db/evidence.sqlite` - SQLite catalog for queries
 
-### Core Components
+### Key Components
 
-1. **Core Analysis Engine** (`src/image_analyzer/core_analyzer.py`)
-   - `LegalEvidenceAnalyzer`: Main analysis class using OpenAI GPT-4 Vision API
-   - Uses structured outputs with Pydantic models for guaranteed schema compliance
-   - Supports both sequential and parallel batch processing
-   - Thread-safe cost tracking across concurrent operations
+1. **CLI (`image_analysis/cli.py`)** - Main Typer application with ingest, analyze, and export commands
+2. **Models (`image_analysis/models.py`)** - Pydantic models for evidence bundles, analysis records, and chain-of-custody
+3. **Database (`image_analysis/db.py`)** - SQLAlchemy models for Evidence and Analysis tables
+4. **Utils (`image_analysis/utils.py`)** - Helper functions for hashing, EXIF extraction, perceptual hashing
+5. **Paths (`image_analysis/paths.py`)** - Layout class for organizing file system structure
 
-2. **Legal Evidence Models**
-   - `LegalEvidence`: Core structured output for forensic analysis
-   - `LegalEvidenceWithPath`: Extended model with source file tracking
-   - `SeverityLevel` & `EvidenceType` enums for legal classification
+### Analysis Pipeline
+1. **Ingest**: Images are hashed, copied to content-addressed storage, metadata extracted
+2. **Analysis**: OpenAI Responses API called with temperature=0, results validated against schema
+3. **Chain of Custody**: Every operation logged with timestamps and actors
+4. **Validation**: All outputs conform to `schemas/evidence.v1.json`
 
-3. **Evidence Organization** (`EvidenceOrganizer`)
-   - Automatically categorizes evidence by severity and legal type
-   - Creates organized directory structure for legal review
-   - Generates comprehensive summary reports
+### Environment Variables
+- `OPENAI_API_KEY` - Required for analysis operations
+- `EVIDENCE_TOOLKIT_MODEL` - Default: "gpt-4.1-mini"
+- `EVIDENCE_TOOLKIT_MODEL_REVISION` - Default: "2025-09-10"
 
-4. **CLI Interface** (`src/image_analyzer/cli.py`)
-   - Full command-line interface with subcommands
-   - Cost estimation and confirmation prompts
-   - JSON output support for integration
-
-### Key Design Patterns
-
-- **Structured Analysis**: Uses OpenAI's structured output feature to guarantee consistent legal evidence format
-- **Parallel Processing**: ThreadPoolExecutor for concurrent API calls with configurable batch sizes
-- **Legal Framework Focus**: Specialized for UK employment law violations and workplace safety
-- **Evidence Chain**: Maintains source file tracking and generates court-ready documentation
-
-### API Integration
-- Uses OpenAI GPT-4 Vision API via the `responses.create()` method
-- Cost tracking: ~$0.0014 per image
-- Structured JSON schema enforcement for reliable legal evidence extraction
-- Thread-safe cost accumulation across parallel processing
-
-### Dependencies
-- `openai>=1.0.0`: Core AI analysis
-- `pydantic>=2.0.0`: Data validation and structured outputs
-- `Pillow>=10.0.0`: Image processing
-- `click>=8.0.0`: CLI framework
-- `python-dotenv>=1.0.0`: Environment configuration
-
-## Configuration System
-
-### Pydantic-Based Configuration
-The system uses comprehensive Pydantic models for type-safe configuration management:
-
-```python
-from config.config import get_config, Environment
-
-# Load environment-specific configuration
-config = get_config(Environment.PRODUCTION)
-
-# All configuration is validated at runtime
-print(f"Model: {config.openai.model}")
-print(f"Confidence threshold: {config.analysis.confidence_threshold}")
-print(f"Audit logging: {config.legal.audit_logging}")
-```
-
-### Environment Types
-- **development**: Conservative settings, gpt-4.1-mini, enhanced logging
-- **testing**: Test-optimized configuration with predictable behavior
-- **production**: High-performance settings, gpt-4o, optimized parallel processing
-- **legal_production**: Maximum security, mandatory audit logging, chain of custody
-- **demo**: Cost-optimized for demonstrations
-
-### Configuration Files
-```
-config/
-├── defaults.yaml           # Base configuration
-├── environments.yaml       # Environment-specific overrides
-├── legal_domains.yaml      # Legal domain configurations
-└── user.yaml              # Optional user customizations
-```
-
-### Key Features
-- **Type Safety**: Full Pydantic validation with error handling
-- **Environment Inheritance**: Hierarchical configuration with overrides
-- **Legal Domain Specialization**: Domain-specific confidence thresholds and requirements
-- **Audit Logging**: Comprehensive audit trails with SHA-256 checksums
-- **Chain of Custody**: Complete evidence tracking for legal compliance
-- **Cost Controls**: Configurable spending limits and warnings
-- **Expert Review**: Automated flagging based on confidence and severity
-
-## Development Notes
-
-- Environment variables: `OPENAI_API_KEY` required, `IMAGE_ANALYZER_ENV` optional
-- Configuration validation: Pydantic models ensure type safety and value constraints
-- Image formats supported: .jpg, .jpeg, .png, .bmp, .tiff
-- Output structure follows legal evidence organization patterns
-- Parallel processing optimized for API rate limits (configurable workers)
-- All analysis results include forensic-quality expert witness notes
-- Audit logging creates JSON audit trails and chain of custody documentation
-
-## Legal Compliance Focus
-
-The system specializes in UK employment law frameworks:
-- Health & Safety at Work Act 1974
-- Workplace (Health, Safety and Welfare) Regulations 1992
-- Management of Health and Safety at Work Regulations 1999
-- Control of Substances Hazardous to Health Regulations 2002
-- Food Safety and Hygiene Regulations
+### Schema Validation
+The canonical schema is `schemas/evidence.v1.json`. All analysis outputs must validate against this schema before storage. The validation script provides detailed error reporting for debugging schema violations.
